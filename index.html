@@ -2,47 +2,82 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>DESERT Splashscreen</title>
+  <title>DESERT App</title>
   <style>
     body, html {
       margin: 0;
       padding: 0;
       height: 100%;
       overflow: hidden;
-      background: black;
       font-family: Arial, sans-serif;
-      color: white;
+      background: black;
     }
-    #splash, #dashboard {
+
+    /* Landing Page */
+    #landing, #splash, #dashboard {
       position: absolute;
       width: 100%;
       height: 100%;
       top: 0; left: 0;
     }
+
+    #landing {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #c19a6b, #e6d2b5);
+      color: #333;
+    }
+
+    #landing h1 {
+      font-size: 3em;
+      margin-bottom: 20px;
+    }
+
+    #landing button {
+      padding: 15px 30px;
+      font-size: 1.2em;
+      background: #d4a373;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      color: white;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    #landing button:hover {
+      background: #b5835a;
+    }
+
+    /* Splash */
+    #splash { display: none; }
+    #splash canvas { width:100%; height:100%; display:block; }
+
+    /* Dashboard */
     #dashboard {
       display: none;
       background: linear-gradient(135deg, #222, #444);
-      display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       opacity: 0;
       transition: opacity 2s ease-in-out;
+      color: white;
     }
-    #dashboard.show {
-      opacity: 1;
-    }
-    #dashboard h1 {
-      font-size: 3em;
-      margin-bottom: 10px;
-    }
-    #dashboard p {
-      font-size: 1.2em;
-      opacity: 0.8;
-    }
+    #dashboard.show { opacity: 1; }
+    #dashboard h1 { font-size: 3em; margin-bottom: 10px; }
+    #dashboard p { font-size: 1.2em; opacity: 0.8; }
   </style>
 </head>
 <body>
+  <!-- Landing Page -->
+  <div id="landing">
+    <h1>Welcome to DESERT</h1>
+    <button onclick="startApp()">Cobalah Sekarang</button>
+  </div>
+
   <!-- Splashscreen -->
   <div id="splash">
     <canvas id="splashCanvas"></canvas>
@@ -50,113 +85,109 @@
 
   <!-- Dashboard -->
   <div id="dashboard">
-    <h1>Welcome to Dashboard</h1>
-    <p>Konten utama bisa ditaruh di sini 🚀</p>
+    <h1>Dashboard</h1>
+    <p>Konten utama ditaruh di sini 🚀</p>
   </div>
 
-  <!-- 🎵 Sound effect -->
+  <!-- 🎵 Sound -->
   <audio id="splashSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_3e1f3f4a54.mp3?filename=whoosh-6316.mp3"></audio>
 
   <!-- Three.js -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/loaders/FontLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/geometries/TextGeometry.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/objects/Lensflare.js"></script>
 
   <script>
+    const landing = document.getElementById("landing");
     const splash = document.getElementById("splash");
     const dashboard = document.getElementById("dashboard");
     const splashSound = document.getElementById("splashSound");
 
-    // Three.js setup
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
-    camera.position.z = 12;
+    let scene, camera, renderer, textMesh, particleSystem, fadeOut = false;
 
-    const renderer = new THREE.WebGLRenderer({canvas: document.getElementById("splashCanvas"), alpha:true});
-    renderer.setSize(window.innerWidth, window.innerHeight);
-
-    // Lighting
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(5,5,5);
-    scene.add(light);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-
-    let textMesh, fadeOut = false;
-
-    // 🌪️ Sandstorm particles
-    const particleCount = 2500;
-    const particlesGeometry = new THREE.BufferGeometry();
-    const positions = [];
-    for (let i=0; i<particleCount; i++) {
-      positions.push((Math.random()-0.5) * 60); // x
-      positions.push((Math.random()-0.5) * 30); // y
-      positions.push((Math.random()-0.5) * 60); // z
+    function startApp() {
+      landing.style.display = "none";
+      splash.style.display = "block";
+      initSplash();
     }
-    particlesGeometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-    const particlesMaterial = new THREE.PointsMaterial({
-      color: 0xe0c073,
-      size: 0.12,
-      transparent: true,
-      opacity: 0.7
-    });
-    const particleSystem = new THREE.Points(particlesGeometry, particlesMaterial);
-    scene.add(particleSystem);
 
-    // 🌞 Sunlight + Lens Flare
-    const textureLoader = new THREE.TextureLoader();
-    const flareTexture = textureLoader.load("https://threejs.org/examples/textures/lensflare/lensflare0.png");
-    const flareColor = new THREE.Color(0xffdd88);
-    const lensflare = new THREE.Lensflare();
-    lensflare.addElement(new THREE.LensflareElement(flareTexture, 400, 0, flareColor));
-    light.add(lensflare);
+    function initSplash() {
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
+      camera.position.z = 10;
 
-    // Load font & create text
-    const loader = new THREE.FontLoader();
-    loader.load("https://threejs.org/examples/fonts/helvetiker_bold.typeface.json", font => {
-      const textGeo = new THREE.TextGeometry("DESERT", {
-        font: font,
-        size: 2.3,
-        height: 0.6,
-        bevelEnabled: true,
-        bevelThickness: 0.1,
-        bevelSize: 0.05,
-        bevelSegments: 5
-      });
+      renderer = new THREE.WebGLRenderer({canvas: document.getElementById("splashCanvas"), alpha:true});
+      renderer.setSize(window.innerWidth, window.innerHeight);
 
-      const textMat = new THREE.MeshStandardMaterial({
+      // Light
+      const light = new THREE.DirectionalLight(0xffffff, 1);
+      light.position.set(5,5,5);
+      scene.add(light);
+      scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+
+      // 🌪️ Sandstorm particles
+      const particleCount = 2000;
+      const particlesGeometry = new THREE.BufferGeometry();
+      const positions = [];
+      for (let i=0; i<particleCount; i++) {
+        positions.push((Math.random()-0.5) * 50);
+        positions.push((Math.random()-0.5) * 30);
+        positions.push((Math.random()-0.5) * 50);
+      }
+      particlesGeometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+      const particlesMaterial = new THREE.PointsMaterial({
         color: 0xe0c073,
-        metalness: 0.3,
-        roughness: 0.4,
+        size: 0.15,
         transparent: true,
-        opacity: 1.0
+        opacity: 0.7
+      });
+      particleSystem = new THREE.Points(particlesGeometry, particlesMaterial);
+      scene.add(particleSystem);
+
+      // Load text
+      const loader = new THREE.FontLoader();
+      loader.load("https://threejs.org/examples/fonts/helvetiker_bold.typeface.json", font => {
+        const textGeo = new THREE.TextGeometry("DESERT", {
+          font: font,
+          size: 2,
+          height: 0.5,
+          bevelEnabled: true,
+          bevelThickness: 0.1,
+          bevelSize: 0.05,
+          bevelSegments: 5
+        });
+
+        const textMat = new THREE.MeshStandardMaterial({
+          color: 0xe0c073,
+          metalness: 0.3,
+          roughness: 0.4,
+          transparent: true,
+          opacity: 1.0
+        });
+
+        textMesh = new THREE.Mesh(textGeo, textMat);
+        textGeo.computeBoundingBox();
+        const centerOffset = -0.5 * (textGeo.boundingBox.max.x - textGeo.boundingBox.min.x);
+        textMesh.position.x = centerOffset;
+        textMesh.scale.set(0.01,0.01,0.01);
+        scene.add(textMesh);
+
+        splashSound.play();
+        setTimeout(()=>{ fadeOut = true; }, 4000);
       });
 
-      textMesh = new THREE.Mesh(textGeo, textMat);
-      textGeo.computeBoundingBox();
-      const centerOffset = -0.5 * (textGeo.boundingBox.max.x - textGeo.boundingBox.min.x);
-      textMesh.position.x = centerOffset;
-      textMesh.scale.set(0.01,0.01,0.01);
-      scene.add(textMesh);
-
-      // 🎵 mainkan sound effect
-      splashSound.play();
-
-      // Mulai fade out setelah 5 detik
-      setTimeout(()=>{ fadeOut = true; }, 5000);
-    });
+      animate();
+    }
 
     function animate() {
       requestAnimationFrame(animate);
 
       if (textMesh) {
-        // Scale in
         if (textMesh.scale.x < 1 && !fadeOut) {
           textMesh.scale.lerp(new THREE.Vector3(1,1,1),0.05);
         }
         textMesh.rotation.y += 0.01;
 
-        // Fade out
         if (fadeOut) {
           textMesh.material.opacity -= 0.01;
           if (textMesh.material.opacity <= 0) {
@@ -168,22 +199,23 @@
         }
       }
 
-      // 🌪️ Animate sandstorm
+      // sandstorm
       const positions = particleSystem.geometry.attributes.position.array;
       for (let i=0; i<positions.length; i+=3) {
-        positions[i] += 0.05; // move x
-        if (positions[i] > 30) positions[i] = -30; // reset
+        positions[i] += 0.02;
+        if (positions[i] > 25) positions[i] = -25;
       }
       particleSystem.geometry.attributes.position.needsUpdate = true;
 
       renderer.render(scene, camera);
     }
-    animate();
 
     window.addEventListener("resize", ()=>{
-      camera.aspect = window.innerWidth/window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      if (renderer && camera) {
+        camera.aspect = window.innerWidth/window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
     });
   </script>
 </body>
