@@ -1,255 +1,277 @@
-<!DOCTYPE html><html lang="id">
+<!doctype html>
+<html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Music Edit — Trim (Prototype)</title>
-  <style>
-    :root{
-      --bg:#0b0b0f;
-      --panel:#14141b;
-      --panel-2:#1b1b26;
-      --text:#eaeaf0;
-      --muted:#9aa0a6;
-      --accent-1:#9333EA; /* purple-600 */
-      --accent-2:#A855F7; /* purple-500 */
-      --accent-3:#C084FC; /* purple-400 */
-      --good:#22c55e;
-      --bad:#f43f5e;
-      --ring: rgba(168,85,247,.35);
-      --shadow: 0 10px 30px rgba(0,0,0,.45), 0 0 40px rgba(168,85,247,.15);
-      --radius: 16px;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      color:var(--text);
-      background:radial-gradient(1200px 1200px at 80% -10%, rgba(168,85,247,.10), transparent 50%),
-                 radial-gradient(900px 900px at -10% 120%, rgba(147,51,234,.10), transparent 40%),
-                 var(--bg);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-    }
-    .app{
-      width:min(920px, 96vw);
-      height:min(620px, 94vh);
-      background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.0)) var(--panel);
-      border:1px solid rgba(255,255,255,.05);
-      border-radius:24px;
-      box-shadow: var(--shadow);
-      position:relative;
-      overflow:hidden;
-    }
-    .content{padding:20px 22px 88px}/* Header */
-.header{
-  display:flex; align-items:center; justify-content:space-between;
-  margin-bottom:18px;
-}
-.icon-btn{
-  width:44px; height:44px; border-radius:14px; border:1px solid rgba(255,255,255,.06);
-  background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-  display:grid; place-items:center; cursor:pointer;
-  box-shadow:0 6px 18px rgba(0,0,0,.25);
-  transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease;
-}
-.icon-btn:hover{ transform:translateY(-1px); border-color:rgba(168,85,247,.5); box-shadow:0 10px 28px rgba(168,85,247,.18)}
-.title{ font-weight:700; letter-spacing:.3px; }
-
-/* Waveform */
-.wave-wrap{
-  position:relative; height:180px; border-radius:22px; overflow:hidden; margin:14px 0 22px;
-  background: linear-gradient(90deg, var(--accent-1), var(--accent-2), var(--accent-3));
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), 0 20px 50px rgba(147,51,234,.22);
-  isolation:isolate;
-}
-/* subtle grid glare */
-.wave-wrap:before{content:""; position:absolute; inset:0; background:
-  radial-gradient(1200px 200px at 50% -60px, rgba(255,255,255,.25), transparent 70%),
-  linear-gradient(180deg, rgba(0,0,0,.2), transparent 35%, rgba(0,0,0,.2) 65%, rgba(0,0,0,.35));
-  mix-blend-mode:overlay; pointer-events:none}
-.wave-bars{
-  position:absolute; inset:22px; display:flex; align-items:flex-end; gap:6px;
-}
-.bar{ width:6px; border-radius:6px; background:rgba(0,0,0,.22); height:20%; animation: bob 2.6s ease-in-out infinite; }
-.bar:nth-child(4n){height:60%}
-.bar:nth-child(4n+1){height:40%}
-.bar:nth-child(4n+2){height:75%}
-.bar:nth-child(4n+3){height:35%}
-.bar:nth-child(even){animation-duration:2.1s}
-.bar:nth-child(3n){animation-duration:3.1s}
-@keyframes bob{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
-
-/* Playhead */
-.playhead{ position:absolute; top:0; bottom:0; width:2px; background:white; left:50%; box-shadow:0 0 0 1px rgba(0,0,0,.2), 0 0 26px rgba(255,255,255,.8);
-}
-.playhead:after{content:""; position:absolute; top:0; left:50%; transform:translate(-50%,-50%);
-  width:12px; height:12px; background:white; border-radius:50%; box-shadow:0 0 24px rgba(255,255,255,.9);
-}
-
-/* Timeline */
-.timeline{
-  background:var(--panel-2); border:1px solid rgba(255,255,255,.06); border-radius:18px; height:76px; position:relative; box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
-  display:flex; align-items:center; padding:0 18px; gap:12px;
-}
-.stamp{ color:var(--muted); font-variant-numeric: tabular-nums; font-size:14px }
-.scrub{ flex:1; height:36px; background: rgba(255,255,255,.04); border-radius:10px; position:relative; overflow:hidden }
-.range{ position:absolute; inset:0; background: linear-gradient(90deg, rgba(168,85,247,.22), rgba(192,132,252,.22)); border-left:2px solid rgba(255,255,255,.7); border-right:2px solid rgba(255,255,255,.7) }
-.handle{ position:absolute; top:-6px; width:18px; height:48px; background:rgba(255,255,255,.85); border-radius:10px; box-shadow:0 8px 24px rgba(255,255,255,.25); cursor:ew-resize }
-.handle.l{ left:14% }
-.handle.r{ right:18% }
-
-/* Footer actions */
-.footer{
-  position:absolute; left:0; right:0; bottom:16px; display:flex; justify-content:center; gap:12px; padding:0 16px;
-}
-.btn{
-  min-width:120px; height:48px; border-radius:22px; padding:0 18px; display:inline-flex; align-items:center; justify-content:center; gap:10px; cursor:pointer; border:1px solid transparent; font-weight:600;
-  transition: transform .12s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
-}
-.btn:focus-visible{ outline:4px solid var(--ring); outline-offset:2px }
-.btn.secondary{ background:var(--panel-2); border-color: rgba(255,255,255,.08)}
-.btn.secondary:hover{ transform:translateY(-1px); border-color: rgba(168,85,247,.5)}
-.btn.primary{
-  background: radial-gradient(120px 60px at 30% 20%, rgba(255,255,255,.18), transparent 40%),
-              linear-gradient(90deg, var(--accent-1), var(--accent-2), var(--accent-3));
-  box-shadow:0 12px 30px rgba(168,85,247,.35), inset 0 0 0 1px rgba(255,255,255,.15);
-  color:#0a0013;
-}
-.btn.primary:hover{ transform:translateY(-1px); box-shadow:0 16px 38px rgba(168,85,247,.45) }
-
-/* micro helpers */
-.row{ display:flex; align-items:center; gap:12px }
-.spacer{ flex:1 }
-.pill{ padding:.35rem .6rem; background: rgba(168,85,247,.18); color:#e9d5ff; border:1px solid rgba(255,255,255,.08); border-radius:999px; font-size:12px }
-
-/* Responsive */
-@media (max-width:560px){
-  .content{ padding:14px 14px 84px }
-  .icon-btn{ width:40px; height:40px; border-radius:12px }
-  .wave-wrap{ height:160px }
-  .timeline{ height:74px }
-  .btn{ min-width:112px; height:46px }
-}
-
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Editor Mockup — Full Features</title>
+<style>
+  :root{
+    --bg:#0b0b0f; --panel:#0f1114; --muted:#aab0b6; --accent:#6c5ce7; --accent2:#00d4b4;
+    --card:#121316; --glass: rgba(255,255,255,0.02);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#07070a,#0f0f12);color:#e8e8ee}
+  .wrap{max-width:980px;margin:14px auto;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);box-shadow:0 20px 60px rgba(0,0,0,.6);background:linear-gradient(180deg,rgba(255,255,255,.01),transparent)}
+  /* Canvas */
+  .canvas-area{height:62vh;min-height:360px;background:linear-gradient(180deg,#08080a,#0b0c10);display:flex;align-items:center;justify-content:center;position:relative;padding:18px}
+  .canvas-frame{width:100%;height:100%;max-width:920px;max-height:100%;background:#000;border-radius:12px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+  #mediaPreview{width:100%;height:100%;object-fit:contain;display:block;background:#000}
+  .upload-overlay{position:absolute;left:16px;top:16px;background:rgba(0,0,0,0.5);padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);cursor:pointer}
+  .hint-bottom{position:absolute;left:16px;bottom:16px;color:var(--muted);font-size:13px}
+  /* Toolbar */
+  .toolbar{display:flex;align-items:center;gap:8px;padding:10px;background:linear-gradient(180deg,var(--panel),#0a0a0d);border-top:1px solid rgba(255,255,255,0.03);overflow:hidden}
+  .tools{display:flex;gap:10px;overflow-x:auto;padding:6px 10px;scrollbar-width:none}
+  .tools::-webkit-scrollbar{display:none}
+  .tool{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 10px;border-radius:10px;min-width:56px;background:var(--glass);border:1px solid rgba(255,255,255,0.02);cursor:pointer;color:var(--muted)}
+  .tool.active{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#040414;box-shadow:0 6px 20px rgba(108,92,231,.18)}
+  .tool .ico{font-size:20px;margin-bottom:6px}
+  .tool .label{font-size:12px;white-space:nowrap}
+  /* Submenu panel */
+  .panel{position:fixed;left:0;right:0;bottom:-420px;background:#0f1114;padding:16px;border-top-left-radius:14px;border-top-right-radius:14px;box-shadow:0 -18px 60px rgba(0,0,0,.6);transition:bottom .28s ease;max-height:48vh;overflow:auto}
+  .panel.open{bottom:0}
+  .panel .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .panel h3{margin:0;font-size:16px}
+  .panel .options{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .pill{padding:8px 12px;background:#121316;border-radius:10px;border:1px solid rgba(255,255,255,0.03);cursor:pointer}
+  .row{display:flex;gap:10px;align-items:center}
+  .btn{padding:10px 14px;border-radius:10px;border:none;cursor:pointer;background:#222;color:#fff}
+  .btn.positive{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#040414}
+  .small{font-size:13px;color:var(--muted)}
+  /* responsive */
+  @media (max-width:720px){ .wrap{margin:6px} .tool{min-width:48px;padding:6px} .panel{padding:12px} }
+</style>
 </head>
 <body>
-  <div class="app" role="application" aria-label="Music Edit — Trim">
-    <div class="content">
-      <!-- Header -->
-      <div class="header">
-        <button class="icon-btn" aria-label="Tutup">
-          <!-- close icon -->
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-        <div class="row">
-          <strong class="title">Trim</strong>
-          <span class="pill">Music</span>
-        </div>
-        <button class="icon-btn" aria-label="Simpan">
-          <!-- check icon -->
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="url(#g1)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <defs>
-              <linearGradient id="g1" x1="0" x2="1">
-                <stop offset="0%" stop-color="var(--accent-1)"/>
-                <stop offset="50%" stop-color="var(--accent-2)"/>
-                <stop offset="100%" stop-color="var(--accent-3)"/>
-              </linearGradient>
-            </defs>
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-        </button>
-      </div><!-- Waveform visual placeholder -->
-  <section class="wave-wrap" aria-label="Waveform Audio">
-    <div class="wave-bars" aria-hidden="true">
-      <!-- generate ~120 bars for dense look -->
-      <!-- These are decorative; in real build, replace with canvas/svg waveform -->
-      <script>
-        // generate bars on load
-        (function(){
-          const wrap = document.currentScript.parentElement;
-          for(let i=0;i<120;i++){
-            const b=document.createElement('div');
-            b.className='bar';
-            wrap.appendChild(b);
-          }
-          document.currentScript.remove();
-        })();
-      </script>
-    </div>
-    <div class="playhead" aria-hidden="true"></div>
-  </section>
+  <div class="wrap" id="app">
 
-  <!-- Timeline -->
-  <div class="timeline" role="region" aria-label="Timeline">
-    <span class="stamp">00:51.73</span>
-    <div class="scrub" aria-hidden="true">
-      <div class="range"></div>
-      <div class="handle l" title="Start"></div>
-      <div class="handle r" title="End"></div>
+    <!-- Canvas area -->
+    <div class="canvas-area">
+      <div class="canvas-frame">
+        <!-- media element inserted here -->
+        <img id="mediaPreview" alt="Preview" src="" style="display:none">
+        <video id="mediaVideo" controls style="display:none;background:#000"></video>
+
+        <label for="fileInput" class="upload-overlay">📁 Upload</label>
+        <input id="fileInput" type="file" accept="image/*,video/*" style="display:none">
+        <div class="hint-bottom">Upload media → preview akan menyesuaikan ukuran canvas</div>
+      </div>
     </div>
-    <span class="stamp">02:33.25</span>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="tools" id="tools">
+        <!-- 22+ icons -->
+        <div class="tool" data-feature="Crop"><div class="ico">📐</div><div class="label">Crop</div></div>
+        <div class="tool" data-feature="Rasio"><div class="ico">🔲</div><div class="label">Rasio</div></div>
+        <div class="tool" data-feature="Trim"><div class="ico">✂️</div><div class="label">Trim</div></div>
+        <div class="tool" data-feature="Split"><div class="ico">🔪</div><div class="label">Split</div></div>
+        <div class="tool" data-feature="Speed"><div class="ico">⏩</div><div class="label">Speed</div></div>
+        <div class="tool" data-feature="Volume"><div class="ico">🔊</div><div class="label">Volume</div></div>
+        <div class="tool" data-feature="Music"><div class="ico">🎵</div><div class="label">Music</div></div>
+        <div class="tool" data-feature="Record"><div class="ico">🎤</div><div class="label">Record</div></div>
+        <div class="tool" data-feature="Filters"><div class="ico">🎨</div><div class="label">Filter</div></div>
+        <div class="tool" data-feature="Effect"><div class="ico">✨</div><div class="label">Effect</div></div>
+        <div class="tool" data-feature="Adjust"><div class="ico">⚙️</div><div class="label">Adjust</div></div>
+        <div class="tool" data-feature="Text"><div class="ico">🅰️</div><div class="label">Text</div></div>
+        <div class="tool" data-feature="Sticker"><div class="ico">⭐</div><div class="label">Sticker</div></div>
+        <div class="tool" data-feature="Overlay"><div class="ico">🖼️</div><div class="label">Overlay</div></div>
+        <div class="tool" data-feature="Replace"><div class="ico">🔁</div><div class="label">Replace</div></div>
+        <div class="tool" data-feature="Duplicate"><div class="ico">📄</div><div class="label">Duplicate</div></div>
+        <div class="tool" data-feature="Background"><div class="ico">🌆</div><div class="label">Background</div></div>
+        <div class="tool" data-feature="RemoveBG"><div class="ico">🧽</div><div class="label">RemoveBG</div></div>
+        <div class="tool" data-feature="Rotate"><div class="ico">🔃</div><div class="label">Rotate</div></div>
+        <div class="tool" data-feature="Flip"><div class="ico">↔️</div><div class="label">Flip</div></div>
+        <div class="tool" data-feature="Frame"><div class="ico">🖼️</div><div class="label">Frame</div></div>
+        <div class="tool" data-feature="Export"><div class="ico">⬇️</div><div class="label">Export</div></div>
+      </div>
+    </div>
+
   </div>
-</div>
 
-<!-- Footer actions -->
-<div class="footer" role="toolbar" aria-label="Aksi">
-  <button class="btn secondary" id="btn-cancel">Batal</button>
-  <button class="btn primary" id="btn-save">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="filter: drop-shadow(0 0 8px rgba(255,255,255,.3))">
-      <polyline points="20 6 9 17 4 12"></polyline>
-    </svg>
-    Simpan
-  </button>
-</div>
+  <!-- Submenu panel -->
+  <div id="panel" class="panel" aria-hidden="true">
+    <div class="head">
+      <h3 id="panelTitle">Feature</h3>
+      <div class="small" id="panelInfo"> </div>
+    </div>
 
-  </div>  <script>
-    // Demo-only: fake drag feedback on handles (visual only)
-    const left = document.querySelector('.handle.l');
-    const right = document.querySelector('.handle.r');
-    const range = document.querySelector('.range');
-    const scrub = document.querySelector('.scrub');
+    <div id="panelBody" class="panel-body">
+      <!-- dynamic content -->
+    </div>
 
-    function setRange(){
-      const l = left.offsetLeft + left.offsetWidth/2;
-      const r = scrub.clientWidth - (right.offsetLeft + right.offsetWidth/2);
-      range.style.left = l + 'px';
-      range.style.right = r + 'px';
-    }
-    setRange();
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px">
+      <button class="btn" id="btnCancel">Batal</button>
+      <button class="btn positive" id="btnDone">Selesai</button>
+    </div>
+  </div>
 
-    function makeDraggable(el, boundary){
-      let startX, origin;
-      el.addEventListener('pointerdown', (e)=>{
-        el.setPointerCapture(e.pointerId);
-        startX = e.clientX; origin = el.offsetLeft; el.style.transition='none';
-      });
-      el.addEventListener('pointermove', (e)=>{
-        if(startX==null) return;
-        const dx = e.clientX - startX;
-        let next = origin + dx;
-        next = Math.max(-2, Math.min(boundary.clientWidth - el.clientWidth + 2, next));
-        el.style.left = next + 'px';
-        setRange();
-      });
-      el.addEventListener('pointerup', ()=>{ startX=null; el.style.transition='' });
-      el.addEventListener('pointercancel', ()=>{ startX=null; el.style.transition='' });
-    }
-    makeDraggable(left, scrub);
-    makeDraggable(right, scrub);
+<script>
+/* Core interactions: load media, open panels, basic panel contents for several features */
+const fileInput = document.getElementById('fileInput');
+const mediaImg = document.getElementById('mediaPreview');
+const mediaVideo = document.getElementById('mediaVideo');
+const tools = document.querySelectorAll('.tool');
+const panel = document.getElementById('panel');
+const panelTitle = document.getElementById('panelTitle');
+const panelBody = document.getElementById('panelBody');
+const panelInfo = document.getElementById('panelInfo');
+const btnCancel = document.getElementById('btnCancel');
+const btnDone = document.getElementById('btnDone');
 
-    // Demo buttons
-    document.getElementById('btn-cancel').addEventListener('click', ()=> alert('Batal'));
-    document.getElementById('btn-save').addEventListener('click', ()=> alert('Disimpan'));
+fileInput.addEventListener('change', e=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  const url = URL.createObjectURL(f);
+  // clear
+  mediaImg.style.display='none'; mediaVideo.style.display='none';
+  const extension = f.type || '';
+  if(extension.startsWith('video')){
+    mediaVideo.src = url; mediaVideo.style.display='block'; mediaVideo.play().catch(()=>{});
+  } else {
+    mediaImg.src = url; mediaImg.style.display='block';
+  }
+});
 
-    // Recompute on resize
-    addEventListener('resize', setRange);
-  </script></body>
-</html>
+/* show panel helper */
+function openPanel(feature){
+  panelTitle.textContent = feature;
+  panelInfo.textContent = '';
+  panelBody.innerHTML = '';
+  // mark active tool
+  document.querySelectorAll('.tool').forEach(t=>t.classList.toggle('active', t.dataset.feature===feature));
+  // populate panel for specific features (some real, others placeholder)
+  if(feature==='Rasio'){
+    panelInfo.textContent = 'Ubah aspect ratio canvas';
+    const opts = ['1:1','9:16','16:9','4:3','Free'];
+    const wrap = document.createElement('div'); wrap.className='options';
+    opts.forEach(o=>{
+      const b = document.createElement('div'); b.className='pill'; b.textContent=o;
+      b.onclick = ()=>{ applyRatio(o); };
+      wrap.appendChild(b);
+    });
+    panelBody.appendChild(wrap);
+  }
+  else if(feature==='Trim'){
+    panelInfo.textContent = 'Geser untuk menentukan start/end';
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <div style="flex:1"><input id="trimStart" type="range" min="0" max="100" value="10"></div>
+        <div style="flex:1"><input id="trimEnd" type="range" min="0" max="100" value="90"></div>
+      </div>
+      <div class="small">Preview tombol Selesai untuk apply (simulated)</div>
+    `;
+    panelBody.appendChild(container);
+  }
+  else if(feature==='Speed'){
+    panelInfo.textContent = 'Ubah kecepatan playback';
+    const wrap = document.createElement('div'); wrap.className='options';
+    ['0.5x','0.75x','1x','1.5x','2x'].forEach(s=>{
+      const b = document.createElement('div'); b.className='pill'; b.textContent=s; b.onclick=()=>applySpeed(s); wrap.appendChild(b);
+    });
+    panelBody.appendChild(wrap);
+  }
+  else if(feature==='Volume'){
+    panelInfo.textContent = 'Atur volume / fade';
+    panelBody.innerHTML = `<div style="display:flex;align-items:center;gap:8px"><input id="volRange" type="range" min="0" max="100" value="100"></div><div class="small">Fade In / Out tersedia di implementasi selanjutnya</div>`;
+    const vr = panelBody.querySelector('#volRange');
+    vr.oninput = ()=>{ if(mediaVideo.style.display==='block') mediaVideo.volume = vr.value/100; };
+  }
+  else if(feature==='Crop'){
+    panelInfo.textContent = 'Crop area (preview only)';
+    panelBody.innerHTML = `<div class="small">Tool crop akan menampilkan crop box di canvas (prototype)</div>`;
+    // simple demo: toggle a semi-transparent overlay showing crop box
+    const btn = document.createElement('div'); btn.className='pill'; btn.textContent='Toggle Crop Box';
+    btn.onclick = toggleCropBox;
+    panelBody.appendChild(btn);
+  }
+  else if(feature==='Rotate'){
+    panelInfo.textContent = 'Putar / flip';
+    const wrap = document.createElement('div'); wrap.className='options';
+    [['Rotate 90','rotate90'],['Rotate -90','rotate-90'],['Flip H','flipH']].forEach(x=>{
+      const b = document.createElement('div'); b.className='pill'; b.textContent=x[0]; b.onclick=()=>applyRotate(x[1]); wrap.appendChild(b);
+    });
+    panelBody.appendChild(wrap);
+  }
+  else if(feature==='Replace'){
+    panelInfo.textContent = 'Ganti media';
+    const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*,video/*';
+    inp.onchange = e=>{ const f=e.target.files[0]; if(!f) return; const u=URL.createObjectURL(f); mediaImg.style.display='none'; mediaVideo.style.display='none'; if(f.type.startsWith('video')){ mediaVideo.src=u; mediaVideo.style.display='block'; mediaVideo.play().catch(()=>{});} else {mediaImg.src=u; mediaImg.style.display='block';} };
+    panelBody.appendChild(inp);
+  }
+  else if(feature==='RemoveBG'){
+    panelInfo.textContent='Remove background (simulated)';
+    panelBody.innerHTML = '<div class="small">Fitur ini butuh backend/ML — placeholder saja</div>';
+  }
+  else if(feature==='Export'){
+    panelInfo.textContent='Export (simulated)';
+    panelBody.innerHTML = '<div class="small">Export akan dibuat di tahap selanjutnya (ffmpeg)</div>';
+  }
+  else {
+    panelInfo.textContent = '';
+    panelBody.innerHTML = `<div class="small">Placeholder options for ${feature}</div>`;
+  }
+
+  panel.classList.add('open');
+  panel.setAttribute('aria-hidden','false');
+}
+
+/* small feature implementations (simulated) */
+function applyRatio(r){
+  const frame = document.querySelector('.canvas-frame');
+  if(r==='1:1'){ frame.style.aspectRatio='1/1'; frame.style.height='auto'; frame.style.maxHeight='80vh'; }
+  else if(r==='9:16'){ frame.style.aspectRatio='9/16'; frame.style.height='auto'; frame.style.maxHeight='90vh'; }
+  else if(r==='16:9'){ frame.style.aspectRatio='16/9'; frame.style.height='auto'; frame.style.maxHeight='80vh'; }
+  else if(r==='4:3'){ frame.style.aspectRatio='4/3'; frame.style.height='auto'; frame.style.maxHeight='80vh'; }
+  else if(r==='Free'){ frame.style.aspectRatio='auto'; frame.style.height='100%'; frame.style.maxHeight='100%'; }
+  // close panel to show result
+  setTimeout(()=>{ closePanel(); }, 220);
+}
+function applySpeed(s){
+  const v = parseFloat(s.replace('x',''))||1;
+  if(mediaVideo.style.display==='block'){ mediaVideo.playbackRate = v; }
+  closePanel();
+}
+function applyRotate(mode){
+  if(mediaVideo.style.display==='block'){ if(mode==='rotate90') mediaVideo.style.transform='rotate(90deg)'; else if(mode==='rotate-90') mediaVideo.style.transform='rotate(-90deg)'; else if(mode==='flipH') mediaVideo.style.transform='scaleX(-1)'; }
+  if(mediaImg.style.display==='block'){ if(mode==='rotate90') mediaImg.style.transform='rotate(90deg)'; else if(mode==='rotate-90') mediaImg.style.transform='rotate(-90deg)'; else if(mode==='flipH') mediaImg.style.transform='scaleX(-1)'; }
+  closePanel();
+}
+
+/* crop box demo */
+let cropBox = null;
+function toggleCropBox(){
+  const frame = document.querySelector('.canvas-frame');
+  if(cropBox){ cropBox.remove(); cropBox=null; return; }
+  cropBox = document.createElement('div');
+  cropBox.style.position='absolute'; cropBox.style.border='2px dashed rgba(255,255,255,0.6)'; cropBox.style.left='12%'; cropBox.style.top='12%'; cropBox.style.width='76%'; cropBox.style.height='76%'; cropBox.style.pointerEvents='none';
+  frame.appendChild(cropBox);
+}
+
+/* panel close */
+function closePanel(){ panel.classList.remove('open'); panel.setAttribute('aria-hidden','true'); document.querySelectorAll('.tool').forEach(t=>t.classList.remove('active')); }
+
+/* wire up toolbar clicks */
+document.getElementById('tools').addEventListener('click', e=>{
+  const el = e.target.closest('.tool');
+  if(!el) return;
+  const feature = el.dataset.feature;
+  openPanel(feature);
+});
+
+/* cancel/done */
+btnCancel.onclick = closePanel;
+btnDone.onclick = ()=>{ /* Here we would apply changes — currently simulated */ closePanel(); };
+
+/* convenience: open file dialog when clicking upload overlay */
+document.querySelector('.upload-overlay').addEventListener('click', ()=>fileInput.click());
+
+/* helper used above */
+function closePanelImmediate(){ panel.classList.remove('open'); panel.setAttribute('aria-hidden','true'); }
+
+/* small utility for demo view to close panel when clicking outside */
+window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closePanel(); });
+
+</script>
+</body>
+      </html>
