@@ -1,119 +1,529 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Video Editor Workspace</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Inter', sans-serif;
-      background: #000;
-      color: #fff;
-    }
-    .workspace {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
-    /* Header */
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 16px;
-      font-size: 18px;
-      background: #111;
-    }
-    .header button {
-      background: none;
-      border: none;
-      color: #fff;
-      font-size: 20px;
-      cursor: pointer;
-    }
-    /* Canvas */
-    .canvas {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #111;
-    }
-    .canvas video, .canvas img {
-      max-width: 90%;
-      max-height: 90%;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.7);
-    }
-    /* Timeline */
-    .timeline {
-      height: 100px;
-      background: #1a1a1a;
-      display: flex;
-      align-items: center;
-      overflow-x: auto;
-      padding: 10px;
-    }
-    .frame {
-      width: 60px;
-      height: 60px;
-      background: #333;
-      margin-right: 6px;
-      border-radius: 6px;
-    }
-    /* Tools */
-    .tools {
-      display: flex;
-      justify-content: space-around;
-      padding: 12px 0;
-      background: #111;
-      border-top: 1px solid #222;
-    }
-    .tools button {
-      background: none;
-      border: none;
-      color: #fff;
-      font-size: 14px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      cursor: pointer;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Workspace Editor – Final</title>
+<style>
+  :root{
+    --bg:#121212; --panel:#1f1f1f; --btn:#2f2f2f; --btnH:#444;
+    --muted:#9b9b9b; --accent:#7b61ff; --text:#fff;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:Inter, system-ui, Arial; -webkit-font-smoothing:antialiased;
+  }
+
+  header{max-width:1200px;margin:16px auto;padding:12px 16px;background:linear-gradient(180deg,#1b1b1b,#171717);border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  header h1{font-size:16px;margin:0}
+  .row{display:flex;gap:8px;align-items:center}
+
+  button, .chip, select, input[type="range"]{background:var(--btn); color:var(--text); border:0; border-radius:10px}
+  button, .chip, select{padding:8px 12px; cursor:pointer}
+  button:hover, .chip:hover, select:hover{background:var(--btnH)}
+
+  .panel{max-width:1200px;margin:10px auto;padding:12px;background:var(--panel);border-radius:12px}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
+  .pill{padding:6px 10px;border-radius:999px;background:#2b2b2b}
+  .sep{width:1px;height:28px;background:#2b2b2b;margin:0 6px}
+
+  .range{display:flex;gap:8px;align-items:center;padding:6px;border-radius:8px;background:#161616}
+  .range input{width:140px}
+
+  .canvas-wrap{display:flex;justify-content:center;padding:12px}
+  canvas{background:#000;border-radius:12px;max-width:100%;height:auto;box-shadow:0 6px 30px rgba(0,0,0,0.6);}
+
+  .muted{color:var(--muted);font-size:13px}
+  footer{max-width:1200px;margin:10px auto 30px;padding:6px 12px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;border-radius:8px}
+
+  /* Export popup */
+  .popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.3);
+    background: rgba(0,0,0,0.7);
+    color: var(--text);
+    padding: 18px 26px;
+    border-radius: 12px;
+    font-size: 16px;
+    opacity: 0;
+    transition: transform 0.6s cubic-bezier(.2,.9,.2,1), opacity 0.6s ease;
+    pointer-events: none;
+    z-index: 9999;
+    display:flex;align-items:center;gap:10px;
+  }
+  .popup.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+  .progress {
+    width:120px;height:6px;background:#222;border-radius:6px;overflow:hidden;
+  }
+  .progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),#4aa);} 
+
+  /* small screens */
+  @media (max-width:880px){
+    header, .panel, footer{margin-left:10px;margin-right:10px}
+    .range input{width:100px}
+  }
+</style>
 </head>
 <body>
-  <div class="workspace">
-    <!-- Header -->
-    <div class="header">
-      <button>✖</button>
-      <span>Edit Video</span>
-      <button>✔</button>
-    </div>
 
-    <!-- Canvas -->
-    <div class="canvas">
-      <video src="sample.mp4" controls></video>
-    </div>
-
-    <!-- Timeline -->
-    <div class="timeline">
-      <div class="frame"></div>
-      <div class="frame"></div>
-      <div class="frame"></div>
-      <div class="frame"></div>
-      <div class="frame"></div>
-      <div class="frame"></div>
-    </div>
-
-    <!-- Tools -->
-    <div class="tools">
-      <button>✂️<span>Cut</span></button>
-      <button>🎶<span>Audio</span></button>
-      <button>🎨<span>Filter</span></button>
-      <button>🔤<span>Text</span></button>
-      <button>⚡<span>Speed</span></button>
-    </div>
+<header>
+  <h1>🎬 Workspace Editor – Final</h1>
+  <div class="row">
+    <button id="btnUpload">Upload Foto/Video</button>
+    <div class="sep"></div>
+    <button id="btnPlayPause" class="chip">Play</button>
+    <button id="btnStop" class="chip">Stop</button>
+    <span id="status" class="muted">Tidak ada media</span>
   </div>
+</header>
+
+<div class="panel">
+  <div class="controls">
+    <span class="pill">Toolbar</span>
+
+    <!-- Filters -->
+    <button class="chip" id="btnNone">None</button>
+    <button class="chip" id="btnGray">Grayscale</button>
+    <button class="chip" id="btnSepia">Sepia</button>
+    <button class="chip" id="btnInvert">Invert</button>
+
+    <div class="sep"></div>
+
+    <!-- Adjust -->
+    <div class="range"><label class="muted">Brightness</label><input id="rngBrt" type="range" min="0" max="2" step="0.05" value="1"></div>
+    <div class="range"><label class="muted">Contrast</label><input id="rngCtr" type="range" min="0" max="2" step="0.05" value="1"></div>
+    <div class="range"><label class="muted">Saturation</label><input id="rngSat" type="range" min="0" max="2" step="0.05" value="1"></div>
+
+    <div class="sep"></div>
+
+    <button class="chip" id="btnRotate">Rotate 90°</button>
+    <button class="chip" id="btnText">Tambah Teks</button>
+    <button class="chip" id="btnCrop">Crop 50%</button>
+
+    <div class="sep"></div>
+
+    <button class="chip" id="btnExportPNG">Export PNG</button>
+    <button class="chip" id="btnStartRec">Start Record</button>
+    <button class="chip" id="btnStopRec" disabled>Stop Record</button>
+    <a id="downloadLink" class="chip" download="canvas.webm" style="display:none">Download Video</a>
+  </div>
+</div>
+
+<div class="panel canvas-wrap">
+  <!-- Canvas ukuran default 960x540 (16:9) -->
+  <canvas id="canvas" width="960" height="540"></canvas>
+</div>
+
+<!-- Export popup -->
+<div id="exportPopup" class="popup" aria-hidden="true">
+  <span id="exportIcon">📤</span>
+  <span id="exportText">Exporting...</span>
+  <div class="progress" id="exportProgress" style="display:none"><i></i></div>
+</div>
+
+<footer>
+  <span class="muted">Tips: Rekaman video akan disimpan sebagai WebM (browser dependent). Untuk MP4 gunakan ffmpeg server-side atau ffmpeg.wasm (besar).</span>
+  <span id="time" class="muted">00:00</span>
+</footer>
+
+<script>
+/* ========== State & elements ========== */
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const statusEl = document.getElementById('status');
+const timeEl = document.getElementById('time');
+
+let img = null;          // Image object if photo loaded
+let vid = null;          // Video element if video loaded
+let playing = false;
+let rafId = null;
+let angle = 0;           // rotation angle (deg)
+let texts = [];          // {txt, x, y, w, h}
+let dragging = null;     // index of text being dragged or null
+let dragOffset = {x:0,y:0};
+let startTime = 0;
+
+/* filter/adjust state */
+const state = {
+  filterName: 'none', // none|grayscale|sepia|invert
+  brightness: 1,
+  contrast: 1,
+  saturation: 1
+};
+
+/* Recorder */
+let recorder = null, recordedChunks = [], recStream = null;
+
+/* ======= Utils ======= */
+function fmt(t){
+  const s = Math.max(0, Math.floor(t/1000));
+  const m = String(Math.floor(s/60)).padStart(2,'0');
+  const r = String(s%60).padStart(2,'0');
+  return `${m}:${r}`;
+}
+
+function buildFilter(){
+  const f = [];
+  if (state.filterName !== 'none') f.push(`${state.filterName}(1)`);
+  f.push(`brightness(${state.brightness})`);
+  f.push(`contrast(${state.contrast})`);
+  f.push(`saturate(${state.saturation})`);
+  return f.join(' ');
+}
+
+/* Draw single frame (image or video) with rotation, filters and texts */
+function drawFrame(source){
+  ctx.save();
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // center/rotate
+  ctx.translate(canvas.width/2, canvas.height/2);
+  ctx.rotate(angle * Math.PI/180);
+  ctx.filter = buildFilter();
+
+  // draw source scaled to canvas full area centered
+  if (source) {
+    ctx.drawImage(source, -canvas.width/2, -canvas.height/2, canvas.width, canvas.height);
+  } else {
+    // empty placeholder
+    ctx.fillStyle = '#000';
+    ctx.fillRect(-canvas.width/2, -canvas.height/2, canvas.width, canvas.height);
+  }
+
+  ctx.filter = 'none';
+  ctx.restore();
+
+  // draw texts (no rotation)
+  texts.forEach((t,i) => {
+    ctx.font = '28px Inter, Arial';
+    ctx.textBaseline = 'top';
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillStyle = 'white';
+    // measure and store bounding box for dragging detection
+    const metrics = ctx.measureText(t.txt);
+    const w = metrics.width;
+    const h = 28 * 1.2;
+    t.w = w; t.h = h;
+    ctx.strokeText(t.txt, t.x, t.y);
+    ctx.fillText(t.txt, t.x, t.y);
+  });
+}
+
+/* Main render loop for video */
+function renderLoop(){
+  if (vid && playing) {
+    drawFrame(vid);
+    rafId = requestAnimationFrame(renderLoop);
+    timeEl.textContent = fmt((performance.now() - startTime));
+  }
+}
+
+/* Stop render loop */
+function stopLoop(){
+  playing = false;
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = null;
+}
+
+/* Fit canvas placeholder (we keep canvas size fixed but function available) */
+function fitCanvasToMedia(w,h){
+  // currently we draw to full canvas (stretch). Here we could add letterbox logic later.
+}
+
+/* ====== Upload media ====== */
+document.getElementById('btnUpload').onclick = () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*,video/*';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    texts = []; angle = 0;
+    if (file.type.startsWith('image/')) {
+      // load image
+      if (vid){ vid.pause(); vid = null; stopLoop(); }
+      img = new Image();
+      img.onload = () => {
+        fitCanvasToMedia(img.naturalWidth, img.naturalHeight);
+        drawFrame(img);
+        statusEl.textContent = `Foto dimuat (${img.naturalWidth}×${img.naturalHeight})`;
+      };
+      img.src = url;
+    } else {
+      // load video
+      img = null;
+      vid = document.createElement('video');
+      vid.src = url;
+      vid.loop = true;
+      vid.muted = true;
+      vid.playsInline = true;
+      vid.onloadedmetadata = () => {
+        fitCanvasToMedia(vid.videoWidth, vid.videoHeight);
+        statusEl.textContent = `Video dimuat (${vid.videoWidth}×${vid.videoHeight})`;
+      };
+      vid.onplay = () => {
+        playing = true;
+        startTime = performance.now();
+        renderLoop();
+        document.getElementById('btnPlayPause').textContent = 'Pause';
+      };
+      vid.onpause = () => { stopLoop(); document.getElementById('btnPlayPause').textContent = 'Play'; };
+      vid.play();
+    }
+  };
+  input.click();
+};
+
+/* ===== Play/Pause/Stop ===== */
+document.getElementById('btnPlayPause').onclick = () => {
+  if (!vid) return;
+  if (vid.paused) vid.play();
+  else vid.pause();
+};
+document.getElementById('btnStop').onclick = () => {
+  if (!vid) return;
+  vid.pause(); vid.currentTime = 0; stopLoop();
+  drawFrame(vid);
+  document.getElementById('btnPlayPause').textContent = 'Play';
+  timeEl.textContent = '00:00';
+};
+
+/* ===== Filters & Adjust ===== */
+document.getElementById('btnNone').onclick   = () => { state.filterName='none'; redraw(); };
+document.getElementById('btnGray').onclick   = () => { state.filterName='grayscale'; redraw(); };
+document.getElementById('btnSepia').onclick  = () => { state.filterName='sepia'; redraw(); };
+document.getElementById('btnInvert').onclick = () => { state.filterName='invert'; redraw(); };
+
+document.getElementById('rngBrt').oninput = e => { state.brightness=+e.target.value; redraw(); };
+document.getElementById('rngCtr').oninput = e => { state.contrast=+e.target.value; redraw(); };
+document.getElementById('rngSat').oninput = e => { state.saturation=+e.target.value; redraw(); };
+
+/* redraw helper */
+function redraw(){
+  if (img) drawFrame(img);
+  if (vid) {
+    // if video paused, draw current frame with filters
+    if (vid.paused) drawFrame(vid);
+  }
+}
+
+/* ===== Rotate ===== */
+document.getElementById('btnRotate').onclick = () => { angle = (angle + 90) % 360; redraw(); };
+
+/* ===== Text overlay & drag ===== */
+document.getElementById('btnText').onclick = () => {
+  const txt = prompt('Masukkan teks:');
+  if (!txt) return;
+  // add near top-left with offset
+  texts.push({txt, x:40, y:40 + texts.length*36, w:0, h:0});
+  redraw();
+};
+
+/* Dragging logic: mousedown -> check if inside any text bbox -> drag */
+canvas.addEventListener('mousedown', (ev) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = (ev.clientX - rect.left) * (canvas.width/rect.width);
+  const y = (ev.clientY - rect.top) * (canvas.height/rect.height);
+  // check last-to-first so we pick top-most
+  for (let i = texts.length - 1; i >= 0; i--) {
+    const t = texts[i];
+    // bbox stored in t.w,t.h after last redraw; if missing, measure quickly
+    if (!t.w) {
+      ctx.font = '28px Inter, Arial';
+      t.w = ctx.measureText(t.txt).width;
+      t.h = 28 * 1.2;
+    }
+    if (x >= t.x && x <= t.x + t.w && y >= t.y && y <= t.y + t.h) {
+      dragging = i;
+      dragOffset.x = x - t.x;
+      dragOffset.y = y - t.y;
+      canvas.style.cursor = 'grabbing';
+      return;
+    }
+  }
+});
+
+window.addEventListener('mousemove', (ev) => {
+  if (dragging === null) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = (ev.clientX - rect.left) * (canvas.width/rect.width);
+  const y = (ev.clientY - rect.top) * (canvas.height/rect.height);
+  texts[dragging].x = x - dragOffset.x;
+  texts[dragging].y = y - dragOffset.y;
+  redraw();
+});
+
+window.addEventListener('mouseup', () => {
+  if (dragging !== null) {
+    dragging = null;
+    canvas.style.cursor = 'default';
+  }
+});
+
+/* ===== Crop 50% center (bake) ===== */
+document.getElementById('btnCrop').onclick = () => {
+  // snapshot current canvas
+  const tmp = document.createElement('canvas');
+  tmp.width = canvas.width; tmp.height = canvas.height;
+  tmp.getContext('2d').drawImage(canvas,0,0);
+  const cw = Math.floor(canvas.width/2), ch = Math.floor(canvas.height/2);
+  const cx = Math.floor(canvas.width/4), cy = Math.floor(canvas.height/4);
+  const data = tmp.getContext('2d').getImageData(cx, cy, cw, ch);
+  // resize canvas
+  canvas.width = cw; canvas.height = ch;
+  ctx.putImageData(data, 0, 0);
+  // adjust text positions
+  texts = texts.map(t => ({...t, x: Math.max(6, t.x - cx), y: Math.max(6, t.y - cy)}));
+  angle = 0;
+  statusEl.textContent = 'Cropped 50% tengah';
+};
+
+/* ===== Export popup (shared) ===== */
+const popup = document.getElementById('exportPopup');
+const progressEl = document.getElementById('exportProgress');
+function showExportPopup(withProgress=false){
+  popup.classList.add('show');
+  popup.setAttribute('aria-hidden','false');
+  if (withProgress) {
+    progressEl.style.display = 'block';
+    progressEl.firstElementChild.style.width = '0%';
+    // animate bar
+    let p = 0;
+    const iv = setInterval(()=> {
+      p += 6 + Math.random()*6;
+      if (p >= 98){ p = 98; clearInterval(iv); }
+      progressEl.firstElementChild.style.width = p + '%';
+    }, 120);
+    return iv; // return interval id to clear later if needed
+  } else {
+    progressEl.style.display = 'none';
+    return null;
+  }
+}
+function hideExportPopup(intervalId){
+  // if progress anim running, set to full then hide
+  if (intervalId) {
+    clearInterval(intervalId);
+    progressEl.firstElementChild.style.width = '100%';
+    setTimeout(()=> {
+      popup.classList.remove('show');
+      popup.setAttribute('aria-hidden','true');
+    }, 450);
+  } else {
+    setTimeout(()=> {
+      popup.classList.remove('show');
+      popup.setAttribute('aria-hidden','true');
+    }, 600);
+  }
+}
+
+/* ===== Export PNG (snapshot) ===== */
+document.getElementById('btnExportPNG').onclick = () => {
+  const iv = showExportPopup(false);
+  // small delay to show animation
+  setTimeout(()=> {
+    const a = document.createElement('a');
+    a.download = 'canvas.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+    hideExportPopup(iv);
+  }, 850);
+};
+
+/* ===== Recording to WebM (captures canvas + audio if available) ===== */
+function buildRecordStream(){
+  const fps = 30;
+  const canvasStream = canvas.captureStream(fps);
+  // try to include video audio if available
+  if (vid && typeof vid.captureStream === 'function'){
+    try {
+      const vstream = vid.captureStream();
+      const aTracks = vstream.getAudioTracks();
+      if (aTracks.length) {
+        const combined = new MediaStream([...canvasStream.getVideoTracks(), ...aTracks]);
+        return combined;
+      }
+    } catch(e) {
+      // some browsers block cross-origin or autoplay; fallback to canvas-only
+    }
+  }
+  return canvasStream;
+}
+
+function getSupportedMime(){
+  const prefs = [
+    'video/webm;codecs=vp9,opus',
+    'video/webm;codecs=vp8,opus',
+    'video/webm'
+  ];
+  return prefs.find(t => MediaRecorder.isTypeSupported(t)) || '';
+}
+
+document.getElementById('btnStartRec').onclick = () => {
+  if (recorder) return;
+  recordedChunks = [];
+  const iv = showExportPopup(true); // show popup with progress bar
+  const stream = buildRecordStream();
+  const mime = getSupportedMime();
+  try {
+    recorder = new MediaRecorder(stream, mime ? {mimeType:mime} : undefined);
+  } catch (e) {
+    alert('MediaRecorder tidak didukung di browser ini.');
+    hideExportPopup(iv);
+    return;
+  }
+  recorder.ondataavailable = ev => { if (ev.data && ev.data.size) recordedChunks.push(ev.data); };
+  recorder.onstop = () => {
+    const blob = new Blob(recordedChunks, {type: recorder.mimeType || 'video/webm'});
+    const url = URL.createObjectURL(blob);
+    const a = document.getElementById('downloadLink');
+    a.href = url;
+    a.style.display = 'inline-block';
+    a.textContent = 'Download Video (' + Math.round(blob.size/1024) + ' KB)';
+    recorder = null;
+    // stop tracks
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    hideExportPopup(iv);
+    statusEl.textContent = 'Rekaman selesai';
+  };
+  recorder.start(200);
+  document.getElementById('btnStopRec').disabled = false;
+  document.getElementById('downloadLink').style.display = 'none';
+  statusEl.textContent = 'Merekam...';
+  // Ensure video plays and loop
+  if (vid && vid.paused){ vid.play(); }
+  if (!rafId && (vid && !vid.paused)) { renderLoop(); }
+};
+
+document.getElementById('btnStopRec').onclick = () => {
+  if (!recorder) return;
+  recorder.stop();
+  document.getElementById('btnStopRec').disabled = true;
+};
+
+/* ===== Initial canvas grid ===== */
+(function drawGrid(){
+  const step = 40;
+  ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.strokeStyle = '#222';
+  for (let x=0; x<=canvas.width; x+=step){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke(); }
+  for (let y=0; y<=canvas.height; y+=step){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke(); }
+  ctx.fillStyle='#888'; ctx.font='14px Inter,Arial'; ctx.fillText('Canvas 960×540', 12, 24);
+})();
+
+/* Make sure when window/tab hidden we stop heavy loops */
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) stopLoop();
+});
+</script>
+
 </body>
 </html>
