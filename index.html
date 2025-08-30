@@ -3,275 +3,385 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Editor Mockup — Full Features</title>
+<title>Editor Mockup — Full Toolbar</title>
 <style>
   :root{
-    --bg:#0b0b0f; --panel:#0f1114; --muted:#aab0b6; --accent:#6c5ce7; --accent2:#00d4b4;
-    --card:#121316; --glass: rgba(255,255,255,0.02);
+    --bg:#0b0b0f; --panel:#0f1113; --muted:#9ea8b3; --accent:#6c5ce7;
+    --toolbar:#0e0e10; --panel-top: #151517;
   }
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#07070a,#0f0f12);color:#e8e8ee}
-  .wrap{max-width:980px;margin:14px auto;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);box-shadow:0 20px 60px rgba(0,0,0,.6);background:linear-gradient(180deg,rgba(255,255,255,.01),transparent)}
-  /* Canvas */
-  .canvas-area{height:62vh;min-height:360px;background:linear-gradient(180deg,#08080a,#0b0c10);display:flex;align-items:center;justify-content:center;position:relative;padding:18px}
-  .canvas-frame{width:100%;height:100%;max-width:920px;max-height:100%;background:#000;border-radius:12px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
-  #mediaPreview{width:100%;height:100%;object-fit:contain;display:block;background:#000}
-  .upload-overlay{position:absolute;left:16px;top:16px;background:rgba(0,0,0,0.5);padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);cursor:pointer}
-  .hint-bottom{position:absolute;left:16px;bottom:16px;color:var(--muted);font-size:13px}
-  /* Toolbar */
-  .toolbar{display:flex;align-items:center;gap:8px;padding:10px;background:linear-gradient(180deg,var(--panel),#0a0a0d);border-top:1px solid rgba(255,255,255,0.03);overflow:hidden}
-  .tools{display:flex;gap:10px;overflow-x:auto;padding:6px 10px;scrollbar-width:none}
-  .tools::-webkit-scrollbar{display:none}
-  .tool{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 10px;border-radius:10px;min-width:56px;background:var(--glass);border:1px solid rgba(255,255,255,0.02);cursor:pointer;color:var(--muted)}
-  .tool.active{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#040414;box-shadow:0 6px 20px rgba(108,92,231,.18)}
-  .tool .ico{font-size:20px;margin-bottom:6px}
-  .tool .label{font-size:12px;white-space:nowrap}
-  /* Submenu panel */
-  .panel{position:fixed;left:0;right:0;bottom:-420px;background:#0f1114;padding:16px;border-top-left-radius:14px;border-top-right-radius:14px;box-shadow:0 -18px 60px rgba(0,0,0,.6);transition:bottom .28s ease;max-height:48vh;overflow:auto}
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:#e9eef8}
+  .stage{max-width:980px;margin:14px auto;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent)}
+  /* Canvas area */
+  .canvas-area{background: #000; display:flex; align-items:center; justify-content:center; padding:18px}
+  /* aspect wrapper controls the ratio */
+  .canvas-wrap{width:100%;max-width:920px;border-radius:10px; background:#111; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; aspect-ratio: 16/9;}
+  /* when there's no media show placeholder */
+  .canvas-placeholder{color:var(--muted); text-align:center; padding:22px;}
+  /* media fills container */
+  .canvas-media{width:100%;height:100%;object-fit:contain;display:block}
+  /* overlays (for future text/stickers) */
+  .overlays{position:absolute;inset:0;pointer-events:none}
+  /* top bar (small) */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);border-bottom:1px solid rgba(255,255,255,0.02)}
+  .title{font-weight:700}
+  /* Toolbar (icons) */
+  .toolbar{display:flex;gap:8px;padding:10px;background:var(--toolbar);overflow-x:auto;border-top:1px solid rgba(255,255,255,0.03)}
+  .tool{flex:0 0 auto; width:72px; min-width:62px; text-align:center; color:#cfe6ff; cursor:pointer; user-select:none}
+  .tool .icon{display:block;font-size:22px;margin-bottom:6px;line-height:1}
+  .tool .label{font-size:12px;color:var(--muted)}
+  .tool.active{background:linear-gradient(90deg,var(--accent),#00f0d1); color:#0a0a12; border-radius:10px; padding:6px}
+  /* Submenu panel from bottom */
+  .panel{position:fixed;left:0;right:0;bottom: -420px; background:linear-gradient(180deg,var(--panel-top), #0f1113); border-top-left-radius:14px; border-top-right-radius:14px; padding:16px; transition:bottom .28s cubic-bezier(.2,.9,.2,1); box-shadow:0 -20px 40px rgba(0,0,0,.6); z-index:60}
   .panel.open{bottom:0}
-  .panel .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-  .panel h3{margin:0;font-size:16px}
-  .panel .options{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-  .pill{padding:8px 12px;background:#121316;border-radius:10px;border:1px solid rgba(255,255,255,0.03);cursor:pointer}
-  .row{display:flex;gap:10px;align-items:center}
-  .btn{padding:10px 14px;border-radius:10px;border:none;cursor:pointer;background:#222;color:#fff}
-  .btn.positive{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#040414}
-  .small{font-size:13px;color:var(--muted)}
+  .panel .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .panel .options{display:flex;flex-wrap:wrap;gap:8px}
+  .btn{padding:8px 12px;border-radius:8px;border:none;cursor:pointer;background:#222;color:#fff}
+  .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+  .btn.primary{background:linear-gradient(90deg,var(--accent),#00f0d1);color:#040313}
+  /* range */
+  input[type=range]{width:220px}
+  /* small helper */
+  .info{color:var(--muted);font-size:13px}
   /* responsive */
-  @media (max-width:720px){ .wrap{margin:6px} .tool{min-width:48px;padding:6px} .panel{padding:12px} }
+  @media (max-width:720px){
+    .tool{width:56px;min-width:52px}
+    input[type=range]{width:160px}
+    .stage{margin:6px}
+  }
 </style>
 </head>
 <body>
-  <div class="wrap" id="app">
 
-    <!-- Canvas area -->
-    <div class="canvas-area">
-      <div class="canvas-frame">
-        <!-- media element inserted here -->
-        <img id="mediaPreview" alt="Preview" src="" style="display:none">
-        <video id="mediaVideo" controls style="display:none;background:#000"></video>
-
-        <label for="fileInput" class="upload-overlay">📁 Upload</label>
-        <input id="fileInput" type="file" accept="image/*,video/*" style="display:none">
-        <div class="hint-bottom">Upload media → preview akan menyesuaikan ukuran canvas</div>
-      </div>
-    </div>
-
-    <!-- Toolbar -->
-    <div class="toolbar">
-      <div class="tools" id="tools">
-        <!-- 22+ icons -->
-        <div class="tool" data-feature="Crop"><div class="ico">📐</div><div class="label">Crop</div></div>
-        <div class="tool" data-feature="Rasio"><div class="ico">🔲</div><div class="label">Rasio</div></div>
-        <div class="tool" data-feature="Trim"><div class="ico">✂️</div><div class="label">Trim</div></div>
-        <div class="tool" data-feature="Split"><div class="ico">🔪</div><div class="label">Split</div></div>
-        <div class="tool" data-feature="Speed"><div class="ico">⏩</div><div class="label">Speed</div></div>
-        <div class="tool" data-feature="Volume"><div class="ico">🔊</div><div class="label">Volume</div></div>
-        <div class="tool" data-feature="Music"><div class="ico">🎵</div><div class="label">Music</div></div>
-        <div class="tool" data-feature="Record"><div class="ico">🎤</div><div class="label">Record</div></div>
-        <div class="tool" data-feature="Filters"><div class="ico">🎨</div><div class="label">Filter</div></div>
-        <div class="tool" data-feature="Effect"><div class="ico">✨</div><div class="label">Effect</div></div>
-        <div class="tool" data-feature="Adjust"><div class="ico">⚙️</div><div class="label">Adjust</div></div>
-        <div class="tool" data-feature="Text"><div class="ico">🅰️</div><div class="label">Text</div></div>
-        <div class="tool" data-feature="Sticker"><div class="ico">⭐</div><div class="label">Sticker</div></div>
-        <div class="tool" data-feature="Overlay"><div class="ico">🖼️</div><div class="label">Overlay</div></div>
-        <div class="tool" data-feature="Replace"><div class="ico">🔁</div><div class="label">Replace</div></div>
-        <div class="tool" data-feature="Duplicate"><div class="ico">📄</div><div class="label">Duplicate</div></div>
-        <div class="tool" data-feature="Background"><div class="ico">🌆</div><div class="label">Background</div></div>
-        <div class="tool" data-feature="RemoveBG"><div class="ico">🧽</div><div class="label">RemoveBG</div></div>
-        <div class="tool" data-feature="Rotate"><div class="ico">🔃</div><div class="label">Rotate</div></div>
-        <div class="tool" data-feature="Flip"><div class="ico">↔️</div><div class="label">Flip</div></div>
-        <div class="tool" data-feature="Frame"><div class="ico">🖼️</div><div class="label">Frame</div></div>
-        <div class="tool" data-feature="Export"><div class="ico">⬇️</div><div class="label">Export</div></div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Submenu panel -->
-  <div id="panel" class="panel" aria-hidden="true">
-    <div class="head">
-      <h3 id="panelTitle">Feature</h3>
-      <div class="small" id="panelInfo"> </div>
-    </div>
-
-    <div id="panelBody" class="panel-body">
-      <!-- dynamic content -->
-    </div>
-
-    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px">
-      <button class="btn" id="btnCancel">Batal</button>
-      <button class="btn positive" id="btnDone">Selesai</button>
+<div class="stage" role="application" aria-label="Editor mockup">
+  <div class="topbar">
+    <div class="title">Editor — Mockup</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <label style="font-size:13px;color:var(--muted);cursor:pointer">
+        <input id="upload" type="file" accept="image/*,video/*" style="display:none">
+        <span class="btn ghost" onclick="document.getElementById('upload').click()">Upload</span>
+      </label>
+      <button class="btn ghost" id="resetBtn">Reset</button>
     </div>
   </div>
+
+  <div class="canvas-area">
+    <div class="canvas-wrap" id="canvasWrap" style="aspect-ratio:16/9">
+      <div class="canvas-placeholder" id="placeholder">
+        <div style="font-size:18px;margin-bottom:8px">Canvas Preview</div>
+        <div class="info">Klik Upload untuk memasukkan foto / video — media akan mengikuti ukuran canvas</div>
+      </div>
+      <div class="overlays" id="overlays"></div>
+    </div>
+  </div>
+
+  <!-- toolbar with many icons (20+) -->
+  <div class="toolbar" id="toolbar">
+    <!-- first row of features; emoji used for quick mockup -->
+    <div class="tool" data-feature="Crop"><span class="icon">📐</span><span class="label">Crop</span></div>
+    <div class="tool" data-feature="Ratio"><span class="icon">📏</span><span class="label">Rasio</span></div>
+    <div class="tool" data-feature="Trim"><span class="icon">✂️</span><span class="label">Trim</span></div>
+    <div class="tool" data-feature="Split"><span class="icon">🔪</span><span class="label">Split</span></div>
+    <div class="tool" data-feature="Speed"><span class="icon">⏩</span><span class="label">Speed</span></div>
+    <div class="tool" data-feature="Volume"><span class="icon">🔊</span><span class="label">Volume</span></div>
+    <div class="tool" data-feature="Music"><span class="icon">🎵</span><span class="label">Music</span></div>
+    <div class="tool" data-feature="Record"><span class="icon">🎤</span><span class="label">Record</span></div>
+    <div class="tool" data-feature="Replace"><span class="icon">🔁</span><span class="label">Replace</span></div>
+    <div class="tool" data-feature="Duplicate"><span class="icon">🧾</span><span class="label">Duplicate</span></div>
+
+    <!-- more features -->
+    <div class="tool" data-feature="Filter"><span class="icon">🎨</span><span class="label">Filter</span></div>
+    <div class="tool" data-feature="Effect"><span class="icon">✨</span><span class="label">Effect</span></div>
+    <div class="tool" data-feature="Adjust"><span class="icon">⚙️</span><span class="label">Adjust</span></div>
+    <div class="tool" data-feature="Text"><span class="icon">🅰️</span><span class="label">Text</span></div>
+    <div class="tool" data-feature="Sticker"><span class="icon">😊</span><span class="label">Sticker</span></div>
+    <div class="tool" data-feature="Background"><span class="icon">🌆</span><span class="label">Background</span></div>
+    <div class="tool" data-feature="RemoveBG"><span class="icon">🧽</span><span class="label">Remove BG</span></div>
+    <div class="tool" data-feature="Frame"><span class="icon">🖼️</span><span class="label">Frame</span></div>
+    <div class="tool" data-feature="Rotate"><span class="icon">🔄</span><span class="label">Rotate</span></div>
+    <div class="tool" data-feature="Flip"><span class="icon">↔️</span><span class="label">Flip</span></div>
+  </div>
+
+</div>
+
+<!-- Submenu panel -->
+<div class="panel" id="panel">
+  <div class="head">
+    <div id="panelTitle" style="font-weight:700">Feature</div>
+    <div id="panelInfo" class="info"></div>
+  </div>
+  <div class="options" id="panelOptions" style="margin-bottom:12px"></div>
+  <div style="display:flex;justify-content:flex-end;gap:8px">
+    <button class="btn ghost" onclick="closePanel()">Batal</button>
+    <button class="btn primary" onclick="applyPanel()">Selesai</button>
+  </div>
+</div>
 
 <script>
-/* Core interactions: load media, open panels, basic panel contents for several features */
-const fileInput = document.getElementById('fileInput');
-const mediaImg = document.getElementById('mediaPreview');
-const mediaVideo = document.getElementById('mediaVideo');
-const tools = document.querySelectorAll('.tool');
-const panel = document.getElementById('panel');
-const panelTitle = document.getElementById('panelTitle');
-const panelBody = document.getElementById('panelBody');
-const panelInfo = document.getElementById('panelInfo');
-const btnCancel = document.getElementById('btnCancel');
-const btnDone = document.getElementById('btnDone');
+(function(){
+  const upload = document.getElementById('upload');
+  const canvasWrap = document.getElementById('canvasWrap');
+  const placeholder = document.getElementById('placeholder');
+  const overlays = document.getElementById('overlays');
+  const tools = document.querySelectorAll('.tool');
+  const panel = document.getElementById('panel');
+  const panelTitle = document.getElementById('panelTitle');
+  const panelOptions = document.getElementById('panelOptions');
+  const panelInfo = document.getElementById('panelInfo');
+  const resetBtn = document.getElementById('resetBtn');
 
-fileInput.addEventListener('change', e=>{
-  const f = e.target.files[0];
-  if(!f) return;
-  const url = URL.createObjectURL(f);
-  // clear
-  mediaImg.style.display='none'; mediaVideo.style.display='none';
-  const extension = f.type || '';
-  if(extension.startsWith('video')){
-    mediaVideo.src = url; mediaVideo.style.display='block'; mediaVideo.play().catch(()=>{});
-  } else {
-    mediaImg.src = url; mediaImg.style.display='block';
-  }
-});
+  let currentFeature = null;
+  let currentMedia = null;
+  let fitMode = 'contain'; // 'contain' or 'cover' for object-fit
 
-/* show panel helper */
-function openPanel(feature){
-  panelTitle.textContent = feature;
-  panelInfo.textContent = '';
-  panelBody.innerHTML = '';
-  // mark active tool
-  document.querySelectorAll('.tool').forEach(t=>t.classList.toggle('active', t.dataset.feature===feature));
-  // populate panel for specific features (some real, others placeholder)
-  if(feature==='Rasio'){
-    panelInfo.textContent = 'Ubah aspect ratio canvas';
-    const opts = ['1:1','9:16','16:9','4:3','Free'];
-    const wrap = document.createElement('div'); wrap.className='options';
-    opts.forEach(o=>{
-      const b = document.createElement('div'); b.className='pill'; b.textContent=o;
-      b.onclick = ()=>{ applyRatio(o); };
-      wrap.appendChild(b);
+  // upload -> show media in canvasWrap
+  upload.addEventListener('change', e=>{
+    const f = e.target.files[0];
+    if(!f) return;
+    const url = URL.createObjectURL(f);
+    // remove existing media elements & overlays (except static overlays)
+    canvasWrap.querySelectorAll('img,video,canvas').forEach(n=>n.remove());
+    placeholder.style.display = 'none';
+    overlays.innerHTML = '';
+    let el;
+    if(f.type.startsWith('video')){
+      el = document.createElement('video');
+      el.controls = true;
+      el.src = url;
+      el.className = 'canvas-media';
+    } else {
+      el = document.createElement('img');
+      el.src = url;
+      el.className = 'canvas-media';
+      el.alt = 'uploaded';
+    }
+    el.style.objectFit = fitMode;
+    canvasWrap.appendChild(el);
+    currentMedia = el;
+  });
+
+  // reset
+  resetBtn.addEventListener('click', ()=>{
+    canvasWrap.style.aspectRatio = '16/9';
+    document.querySelectorAll('.tool').forEach(t=>t.classList.remove('active'));
+    closePanel();
+    canvasWrap.querySelectorAll('img,video').forEach(n=>n.remove());
+    placeholder.style.display = 'block';
+    currentMedia = null;
+    overlays.innerHTML = '';
+  });
+
+  // tool click opens panel
+  tools.forEach(t=>{
+    t.addEventListener('click', ()=>{
+      const name = t.dataset.feature;
+      if(currentFeature === name){ // toggle close
+        closePanel();
+        t.classList.remove('active');
+        currentFeature = null;
+        return;
+      }
+      // mark active in toolbar
+      document.querySelectorAll('.tool').forEach(x=>x.classList.toggle('active', x===t));
+      openPanel(name);
     });
-    panelBody.appendChild(wrap);
-  }
-  else if(feature==='Trim'){
-    panelInfo.textContent = 'Geser untuk menentukan start/end';
-    const container = document.createElement('div');
-    container.innerHTML = `
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-        <div style="flex:1"><input id="trimStart" type="range" min="0" max="100" value="10"></div>
-        <div style="flex:1"><input id="trimEnd" type="range" min="0" max="100" value="90"></div>
-      </div>
-      <div class="small">Preview tombol Selesai untuk apply (simulated)</div>
-    `;
-    panelBody.appendChild(container);
-  }
-  else if(feature==='Speed'){
-    panelInfo.textContent = 'Ubah kecepatan playback';
-    const wrap = document.createElement('div'); wrap.className='options';
-    ['0.5x','0.75x','1x','1.5x','2x'].forEach(s=>{
-      const b = document.createElement('div'); b.className='pill'; b.textContent=s; b.onclick=()=>applySpeed(s); wrap.appendChild(b);
-    });
-    panelBody.appendChild(wrap);
-  }
-  else if(feature==='Volume'){
-    panelInfo.textContent = 'Atur volume / fade';
-    panelBody.innerHTML = `<div style="display:flex;align-items:center;gap:8px"><input id="volRange" type="range" min="0" max="100" value="100"></div><div class="small">Fade In / Out tersedia di implementasi selanjutnya</div>`;
-    const vr = panelBody.querySelector('#volRange');
-    vr.oninput = ()=>{ if(mediaVideo.style.display==='block') mediaVideo.volume = vr.value/100; };
-  }
-  else if(feature==='Crop'){
-    panelInfo.textContent = 'Crop area (preview only)';
-    panelBody.innerHTML = `<div class="small">Tool crop akan menampilkan crop box di canvas (prototype)</div>`;
-    // simple demo: toggle a semi-transparent overlay showing crop box
-    const btn = document.createElement('div'); btn.className='pill'; btn.textContent='Toggle Crop Box';
-    btn.onclick = toggleCropBox;
-    panelBody.appendChild(btn);
-  }
-  else if(feature==='Rotate'){
-    panelInfo.textContent = 'Putar / flip';
-    const wrap = document.createElement('div'); wrap.className='options';
-    [['Rotate 90','rotate90'],['Rotate -90','rotate-90'],['Flip H','flipH']].forEach(x=>{
-      const b = document.createElement('div'); b.className='pill'; b.textContent=x[0]; b.onclick=()=>applyRotate(x[1]); wrap.appendChild(b);
-    });
-    panelBody.appendChild(wrap);
-  }
-  else if(feature==='Replace'){
-    panelInfo.textContent = 'Ganti media';
-    const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*,video/*';
-    inp.onchange = e=>{ const f=e.target.files[0]; if(!f) return; const u=URL.createObjectURL(f); mediaImg.style.display='none'; mediaVideo.style.display='none'; if(f.type.startsWith('video')){ mediaVideo.src=u; mediaVideo.style.display='block'; mediaVideo.play().catch(()=>{});} else {mediaImg.src=u; mediaImg.style.display='block';} };
-    panelBody.appendChild(inp);
-  }
-  else if(feature==='RemoveBG'){
-    panelInfo.textContent='Remove background (simulated)';
-    panelBody.innerHTML = '<div class="small">Fitur ini butuh backend/ML — placeholder saja</div>';
-  }
-  else if(feature==='Export'){
-    panelInfo.textContent='Export (simulated)';
-    panelBody.innerHTML = '<div class="small">Export akan dibuat di tahap selanjutnya (ffmpeg)</div>';
-  }
-  else {
+  });
+
+  function openPanel(name){
+    currentFeature = name;
+    panelTitle.textContent = name;
+    panelOptions.innerHTML = '';
     panelInfo.textContent = '';
-    panelBody.innerHTML = `<div class="small">Placeholder options for ${feature}</div>`;
+
+    // fill options per feature (dummy but representative)
+    switch(name){
+      case 'Ratio':
+      case 'Rasio':
+        panelInfo.textContent = 'Pilih rasio canvas';
+        ['1:1','9:16','16:9','4:3','Original'].forEach(r=>{
+          const b = document.createElement('button'); b.className='btn ghost'; b.textContent=r;
+          b.onclick = ()=> applyRatio(r);
+          panelOptions.appendChild(b);
+        });
+        // fit mode toggle
+        const fitBtn = document.createElement('button'); fitBtn.className='btn ghost'; fitBtn.textContent = 'Mode: '+fitMode;
+        fitBtn.onclick = ()=>{ fitMode = fitMode==='contain' ? 'cover' : 'contain'; fitBtn.textContent = 'Mode: '+fitMode; if(currentMedia) currentMedia.style.objectFit = fitMode; };
+        panelOptions.appendChild(fitBtn);
+        break;
+
+      case 'Trim':
+        panelInfo.textContent = 'Drag handles / atur start-end (mock)';
+        // show two ranges for start/end (mock)
+        const r1 = document.createElement('input'); r1.type='range'; r1.min=0; r1.max=100; r1.value=10;
+        const r2 = document.createElement('input'); r2.type='range'; r2.min=0; r2.max=100; r2.value=90;
+        panelOptions.appendChild(r1); panelOptions.appendChild(r2);
+        break;
+
+      case 'Crop':
+        panelInfo.textContent = 'Crop area: tarik kotak di canvas (mock)';
+        panelOptions.appendChild(createInfo('Gunakan tool crop di Figma nanti'));
+        break;
+
+      case 'Split':
+        panelInfo.textContent = 'Split klip di posisi playhead (mock)';
+        panelOptions.appendChild(createInfo('Tekan S untuk split (simulasi)'));
+        break;
+
+      case 'Speed':
+        panelInfo.textContent = 'Ubah kecepatan';
+        ['0.5x','1x','1.5x','2x'].forEach(s=>{
+          const b = document.createElement('button'); b.className='btn ghost'; b.textContent=s;
+          b.onclick = ()=> panelInfo.textContent = 'Speed set to '+s+' (preview)';
+          panelOptions.appendChild(b);
+        });
+        break;
+
+      case 'Volume':
+        panelInfo.textContent = 'Atur volume / fade';
+        const vr = document.createElement('input'); vr.type='range'; vr.min=0; vr.max=100; vr.value=80;
+        vr.oninput = ()=> panelInfo.textContent = 'Volume: '+vr.value+'%';
+        panelOptions.appendChild(vr);
+        break;
+
+      case 'Music':
+        panelInfo.textContent = 'Tambahkan background music';
+        const mf = document.createElement('input'); mf.type='file'; mf.accept='audio/*';
+        mf.onchange = ()=> panelInfo.textContent = 'Music loaded (preview)';
+        panelOptions.appendChild(mf);
+        break;
+
+      case 'Record':
+        panelInfo.textContent = 'Rekam suara (browser) — mock';
+        panelOptions.appendChild(createInfo('Gunakan MediaRecorder di versi dev nanti'));
+        break;
+
+      case 'Replace':
+        panelInfo.textContent = 'Ganti media';
+        const rf = document.createElement('input'); rf.type='file'; rf.accept='image/*,video/*';
+        rf.onchange = (e)=>{ const f=e.target.files[0]; if(!f) return; const url=URL.createObjectURL(f); // replace
+          canvasWrap.querySelectorAll('img,video').forEach(n=>n.remove()); placeholder.style.display='none';
+          const el = f.type.startsWith('video')? document.createElement('video') : document.createElement('img');
+          if(f.type.startsWith('video')) el.controls=true;
+          el.src = url; el.className='canvas-media'; el.style.objectFit = fitMode; canvasWrap.appendChild(el); currentMedia = el;
+          panelInfo.textContent = 'Media replaced';
+        };
+        panelOptions.appendChild(rf);
+        break;
+
+      case 'Duplicate':
+        panelInfo.textContent = 'Duplikat klip (mock)';
+        panelOptions.appendChild(createInfo('Menambahkan duplicate di timeline (simulasi)'));
+        break;
+
+      case 'Filter':
+        panelInfo.textContent = 'Pilih filter';
+        ['None','BW','Sepia','Vivid'].forEach(f=>{
+          const b = document.createElement('button'); b.className='btn ghost'; b.textContent=f;
+          b.onclick = ()=> { if(currentMedia) currentMedia.style.filter = f==='None'?'none': f==='BW'?'grayscale(1)': f==='Sepia'?'sepia(.6)':'saturate(1.4)'; };
+          panelOptions.appendChild(b);
+        });
+        break;
+
+      case 'Effect':
+        panelInfo.textContent = 'Effect visual (mock)';
+        ['Glitch','Shake','Blur'].forEach(e=>{
+          const b=document.createElement('button'); b.className='btn ghost'; b.textContent=e; b.onclick=()=>panelInfo.textContent='Effect: '+e;
+          panelOptions.appendChild(b);
+        });
+        break;
+
+      case 'Adjust':
+        panelInfo.textContent = 'Brightness / Contrast / Saturation';
+        ['Brightness','Contrast','Saturation'].forEach(label=>{
+          const row = document.createElement('div'); row.style.marginBottom='6px';
+          const r=document.createElement('input'); r.type='range'; r.min=0; r.max=200; r.value=100;
+          r.oninput = ()=> { if(!currentMedia) return; const b=Number(row.querySelector('input').value); /* quick map */ currentMedia.style.filter = `brightness(${Number(row.querySelectorAll('input')[0]?.value||100)/100})`; };
+          row.appendChild(r); panelOptions.appendChild(row);
+        });
+        break;
+
+      case 'Text':
+        panelInfo.textContent = 'Tambah teks overlay';
+        const ti = document.createElement('input'); ti.placeholder='Tulis teks...'; ti.style.padding='8px';
+        const addText = document.createElement('button'); addText.className='btn'; addText.textContent='Tambah';
+        addText.onclick = ()=>{ if(!ti.value) return alert('Masukkan teks'); const el=document.createElement('div'); el.textContent=ti.value; el.style.position='absolute'; el.style.left='40%'; el.style.top='40%'; el.style.padding='6px 10px'; el.style.background='rgba(0,0,0,0.4)'; el.style.pointerEvents='auto'; overlays.appendChild(el); alert('Text ditambahkan (drag di Figma nanti)'); closePanel(); };
+        panelOptions.appendChild(ti); panelOptions.appendChild(addText);
+        break;
+
+      case 'Sticker':
+        panelInfo.textContent = 'Tambah sticker';
+        ['🔥','✨','❤️','🎉'].forEach(s=>{ const b=document.createElement('button'); b.className='btn ghost'; b.textContent=s; b.onclick = ()=>{ const el=document.createElement('div'); el.textContent=s; el.style.position='absolute'; el.style.left='45%'; el.style.top='45%'; el.style.fontSize='32px'; overlays.appendChild(el); panelInfo.textContent='Sticker ditambahkan'; closePanel(); }; panelOptions.appendChild(b); });
+        break;
+
+      case 'Background':
+        panelInfo.textContent = 'Ganti background canvas';
+        ['Black','White','Transparent'].forEach(bg=>{ const b=document.createElement('button'); b.className='btn ghost'; b.textContent=bg; b.onclick = ()=> { if(bg==='Black') canvasWrap.style.background='#000'; else if(bg==='White') canvasWrap.style.background='#fff'; else canvasWrap.style.background='transparent'; }; panelOptions.appendChild(b); });
+        break;
+
+      case 'RemoveBG':
+        panelInfo.textContent = 'Remove background (mock)';
+        panelOptions.appendChild(createInfo('Fitur remove-bg butuh AI/Cloud — placeholder'));
+        break;
+
+      case 'Frame':
+        panelInfo.textContent = 'Frame / Border';
+        panelOptions.appendChild(createInfo('Tambahkan frame di Figma nanti'));
+        break;
+
+      case 'Rotate':
+        panelInfo.textContent = 'Putar / Flip';
+        const rotL = document.createElement('button'); rotL.className='btn ghost'; rotL.textContent='Rotate 90'; rotL.onclick = ()=> { if(!currentMedia) return; currentMedia.style.transform = (currentMedia.style.transform==='rotate(90deg)')?'':'rotate(90deg)'; };
+        const flipH = document.createElement('button'); flipH.className='btn ghost'; flipH.textContent='Flip H'; flipH.onclick = ()=> { if(!currentMedia) return; currentMedia.style.transform = (currentMedia.style.transform==='scaleX(-1)')?'':'scaleX(-1)'; };
+        panelOptions.appendChild(rotL); panelOptions.appendChild(flipH);
+        break;
+
+      case 'Flip':
+        panelInfo.textContent = 'Mirror / Flip';
+        panelOptions.appendChild(createInfo('Flip horizontal/vertical (use Rotate panel)'));
+        break;
+
+      default:
+        panelOptions.appendChild(createInfo('Belum diimplementasikan — placeholder'));
+    }
+
+    panel.classList.add('open');
   }
 
-  panel.classList.add('open');
-  panel.setAttribute('aria-hidden','false');
-}
+  function applyRatio(r){
+    // set aspect ratio on canvasWrap
+    if(r === 'Original'){
+      canvasWrap.style.aspectRatio = '';
+    } else {
+      const [w,h] = r.split(':').map(Number);
+      if(w && h) canvasWrap.style.aspectRatio = (w/h);
+    }
+    // adjust object-fit: contain by default unless user toggled
+    if(currentMedia) currentMedia.style.objectFit = fitMode;
+    panelInfo.textContent = 'Aspect set to '+r;
+  }
 
-/* small feature implementations (simulated) */
-function applyRatio(r){
-  const frame = document.querySelector('.canvas-frame');
-  if(r==='1:1'){ frame.style.aspectRatio='1/1'; frame.style.height='auto'; frame.style.maxHeight='80vh'; }
-  else if(r==='9:16'){ frame.style.aspectRatio='9/16'; frame.style.height='auto'; frame.style.maxHeight='90vh'; }
-  else if(r==='16:9'){ frame.style.aspectRatio='16/9'; frame.style.height='auto'; frame.style.maxHeight='80vh'; }
-  else if(r==='4:3'){ frame.style.aspectRatio='4/3'; frame.style.height='auto'; frame.style.maxHeight='80vh'; }
-  else if(r==='Free'){ frame.style.aspectRatio='auto'; frame.style.height='100%'; frame.style.maxHeight='100%'; }
-  // close panel to show result
-  setTimeout(()=>{ closePanel(); }, 220);
-}
-function applySpeed(s){
-  const v = parseFloat(s.replace('x',''))||1;
-  if(mediaVideo.style.display==='block'){ mediaVideo.playbackRate = v; }
-  closePanel();
-}
-function applyRotate(mode){
-  if(mediaVideo.style.display==='block'){ if(mode==='rotate90') mediaVideo.style.transform='rotate(90deg)'; else if(mode==='rotate-90') mediaVideo.style.transform='rotate(-90deg)'; else if(mode==='flipH') mediaVideo.style.transform='scaleX(-1)'; }
-  if(mediaImg.style.display==='block'){ if(mode==='rotate90') mediaImg.style.transform='rotate(90deg)'; else if(mode==='rotate-90') mediaImg.style.transform='rotate(-90deg)'; else if(mode==='flipH') mediaImg.style.transform='scaleX(-1)'; }
-  closePanel();
-}
+  function closePanel(){
+    panel.classList.remove('open');
+    currentFeature = null;
+    document.querySelectorAll('.tool').forEach(x=>x.classList.remove('active'));
+  }
 
-/* crop box demo */
-let cropBox = null;
-function toggleCropBox(){
-  const frame = document.querySelector('.canvas-frame');
-  if(cropBox){ cropBox.remove(); cropBox=null; return; }
-  cropBox = document.createElement('div');
-  cropBox.style.position='absolute'; cropBox.style.border='2px dashed rgba(255,255,255,0.6)'; cropBox.style.left='12%'; cropBox.style.top='12%'; cropBox.style.width='76%'; cropBox.style.height='76%'; cropBox.style.pointerEvents='none';
-  frame.appendChild(cropBox);
-}
+  function applyPanel(){
+    // for this mock, simply close and show a short note
+    panelInfo.textContent = 'Applied (mock)';
+    setTimeout(()=> closePanel(), 300);
+  }
 
-/* panel close */
-function closePanel(){ panel.classList.remove('open'); panel.setAttribute('aria-hidden','true'); document.querySelectorAll('.tool').forEach(t=>t.classList.remove('active')); }
+  function createInfo(txt){
+    const d = document.createElement('div'); d.className='info'; d.textContent = txt; return d;
+  }
 
-/* wire up toolbar clicks */
-document.getElementById('tools').addEventListener('click', e=>{
-  const el = e.target.closest('.tool');
-  if(!el) return;
-  const feature = el.dataset.feature;
-  openPanel(feature);
-});
+  // expose closePanel globally
+  window.closePanel = closePanel;
+  window.applyPanel = applyPanel;
+  window.applyRatio = applyRatio;
 
-/* cancel/done */
-btnCancel.onclick = closePanel;
-btnDone.onclick = ()=>{ /* Here we would apply changes — currently simulated */ closePanel(); };
-
-/* convenience: open file dialog when clicking upload overlay */
-document.querySelector('.upload-overlay').addEventListener('click', ()=>fileInput.click());
-
-/* helper used above */
-function closePanelImmediate(){ panel.classList.remove('open'); panel.setAttribute('aria-hidden','true'); }
-
-/* small utility for demo view to close panel when clicking outside */
-window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closePanel(); });
-
+})();
 </script>
 </body>
-      </html>
+</html>
