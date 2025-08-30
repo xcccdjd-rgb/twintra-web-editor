@@ -1,195 +1,224 @@
-<!DOCTYPE html>
-<html lang="id">
+<!DOCTYPE html><html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Editor Foto</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Landing 3D + Splash + Dashboard</title>
   <style>
-    body {
+    body, html {
       margin: 0;
       padding: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      background: #111;
+      height: 100%;
+      font-family: Arial, sans-serif;
+      background: #000;
       color: #fff;
-      font-family: sans-serif;
       overflow: hidden;
     }
-    #canvas {
-      flex: 1;
-      display: block;
-      background: #222;
-      margin: auto;
-      max-width: 100%;
-      max-height: 100%;
-    }
-    .toolbar {
+    #landing, #splash, #dashboard {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       display: flex;
-      justify-content: space-around;
       align-items: center;
-      background: rgba(0,0,0,0.9);
-      padding: 10px;
+      justify-content: center;
+      flex-direction: column;
+      transition: opacity 1s ease;
     }
-    .toolbar button {
-      background: none;
+    #splash, #dashboard { display: none; opacity: 0; }
+    .btn {
+      padding: 12px 24px;
+      background: #ff4081;
       border: none;
       color: #fff;
-      font-size: 14px;
-      padding: 6px 10px;
+      font-size: 18px;
+      border-radius: 8px;
       cursor: pointer;
+      transition: transform 0.3s;
     }
-    .popup {
-      position: fixed;
-      bottom: 60px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,0.85);
-      padding: 12px;
-      border-radius: 10px;
-      display: none;
+    .btn:hover {
+      transform: scale(1.1);
     }
-    .popup button, .popup select {
-      margin: 4px;
-      padding: 6px 10px;
-      background: #333;
-      color: #fff;
-      border: none;
+    #splash video {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    #skipBtn {
+      position: absolute; top: 20px; right: 20px;
+      background: rgba(0,0,0,0.6);
+      padding: 8px 16px;
       border-radius: 6px;
       cursor: pointer;
+      color: #fff;
+      font-size: 14px;
+      z-index: 5;
     }
-    input[type="range"] {
-      width: 120px;
+    #dashboardContent {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      width: 80%;
+      z-index: 2;
+    }
+    .card {
+      background: rgba(255,255,255,0.1);
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+      transition: transform 0.4s ease, opacity 1s ease;
+      opacity: 0;
+      transform: translateY(50px) scale(0.9);
+    }
+    .card.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    h1#dashboardTitle {
+      z-index: 2;
+      opacity: 0;
+      transform: translateY(-40px);
+      transition: opacity 1s ease, transform 1s ease;
+    }
+    h1#dashboardTitle.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    canvas#bgCanvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 1;
+    }
+    #musicToggle {
+      position: absolute; top: 20px; left: 20px;
+      background: rgba(0,0,0,0.6);
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #fff;
+      font-size: 14px;
+      z-index: 5;
     }
   </style>
 </head>
 <body>
-  <canvas id="canvas"></canvas>
+  <div id="landing">
+    <h1>🌌 Selamat Datang</h1>
+    <button class="btn" onclick="startSplash()">🚀 Cobalah Sekarang</button>
+  </div>  <div id="splash">
+    <video id="splashVideo" autoplay muted>
+      <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+    </video>
+    <div id="skipBtn" onclick="goDashboard()">Lewati</div>
+  </div>  <div id="dashboard">
+    <canvas id="bgCanvas"></canvas>
+    <h1 id="dashboardTitle">📊 Dashboard</h1>
+    <div id="dashboardContent">
+      <div class="card">Card 1</div>
+      <div class="card">Card 2</div>
+      <div class="card">Card 3</div>
+    </div>
+    <div id="musicToggle" onclick="toggleMusic()">🔊</div>
+  </div>  <audio id="bgMusic" loop>
+    <source src="https://www.bensound.com/bensound-music/bensound-scifi.mp3" type="audio/mp3">
+  </audio>  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>  <script>
+    const landing = document.getElementById('landing');
+    const splash = document.getElementById('splash');
+    const dashboard = document.getElementById('dashboard');
+    const splashVideo = document.getElementById('splashVideo');
+    const cards = document.querySelectorAll('.card');
+    const dashboardTitle = document.getElementById('dashboardTitle');
+    const bgMusic = document.getElementById('bgMusic');
+    const musicToggle = document.getElementById('musicToggle');
 
-  <div class="toolbar">
-    <input type="file" id="upload" accept="image/*" />
-    <button onclick="openPopup('filterPopup')">Filter</button>
-    <button onclick="openPopup('cropPopup')">Crop</button>
-    <button onclick="openPopup('adjustPopup')">Adjust</button>
-    <button onclick="openPopup('exportPopup')">Export</button>
-  </div>
+    let musicPlaying = false;
 
-  <!-- Popup Filter -->
-  <div id="filterPopup" class="popup">
-    <button onclick="applyFilter('none')">Normal</button>
-    <button onclick="applyFilter('grayscale(100%)')">Grayscale</button>
-    <button onclick="applyFilter('sepia(100%)')">Sepia</button>
-    <button onclick="applyFilter('invert(100%)')">Invert</button>
-  </div>
+    function startSplash(){
+      landing.style.opacity = 0;
+      setTimeout(()=>{ landing.style.display = 'none'; splash.style.display = 'flex'; splash.style.opacity = 1; }, 1000);
+    }
 
-  <!-- Popup Crop -->
-  <div id="cropPopup" class="popup">
-    <button onclick="applyCrop(1,1)">1:1</button>
-    <button onclick="applyCrop(4,3)">4:3</button>
-    <button onclick="applyCrop(16,9)">16:9</button>
-  </div>
+    splashVideo.onended = ()=>{ goDashboard(); };
 
-  <!-- Popup Adjust -->
-  <div id="adjustPopup" class="popup">
-    Brightness <input type="range" min="0" max="200" value="100" id="brightness"><br>
-    Contrast <input type="range" min="0" max="200" value="100" id="contrast">
-    <button onclick="applyAdjust()">Apply</button>
-  </div>
+    function goDashboard(){
+      splash.style.opacity = 0;
+      setTimeout(()=>{ 
+        splash.style.display = 'none'; 
+        dashboard.style.display = 'flex'; 
+        dashboard.style.opacity = 1; 
+        animateDashboard(); 
+        init3D(); 
+        playMusic();
+      }, 1000);
+    }
 
-  <!-- Popup Export -->
-  <div id="exportPopup" class="popup">
-    <select id="resolution">
-      <option value="480">480p</option>
-      <option value="720">720p</option>
-      <option value="1080" selected>1080p</option>
-      <option value="2160">4K</option>
-    </select>
-    <select id="format">
-      <option value="image/png">PNG</option>
-      <option value="image/jpeg">JPG</option>
-      <option value="image/webp">WebP</option>
-    </select>
-    <button onclick="exportCanvas()">Download</button>
-  </div>
+    function animateDashboard(){
+      dashboardTitle.classList.add('show');
+      cards.forEach((card, i)=>{
+        setTimeout(()=>{ card.classList.add('show'); }, i*300);
+      });
+    }
 
-  <script>
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    let img = new Image();
-    let currentFilter = 'none';
-    let brightness = 100;
-    let contrast = 100;
-
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight - 60;
-
-    document.getElementById('upload').addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = ev => {
-          img.onload = () => drawImage();
-          img.src = ev.target.result;
-        };
-        reader.readAsDataURL(file);
+    // Background 3D Particles
+    let scene, camera, renderer, stars;
+    function init3D(){
+      const canvas = document.getElementById('bgCanvas');
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+      renderer = new THREE.WebGLRenderer({canvas: canvas, alpha:true});
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      
+      const geometry = new THREE.BufferGeometry();
+      const vertices = [];
+      for (let i=0; i<5000; i++){
+        const x = THREE.MathUtils.randFloatSpread(2000);
+        const y = THREE.MathUtils.randFloatSpread(2000);
+        const z = THREE.MathUtils.randFloatSpread(2000);
+        vertices.push(x,y,z);
       }
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices,3));
+      const material = new THREE.PointsMaterial({color:0xffffff});
+      stars = new THREE.Points(geometry, material);
+      scene.add(stars);
+
+      camera.position.z = 1;
+      animate();
+    }
+
+    function animate(){
+      requestAnimationFrame(animate);
+      stars.rotation.x += 0.0005;
+      stars.rotation.y += 0.0005;
+      renderer.render(scene,camera);
+    }
+
+    // Hover effect untuk cards
+    document.addEventListener('mousemove', (e)=>{
+      const x = (e.clientX / window.innerWidth - 0.5) * 10;
+      const y = (e.clientY / window.innerHeight - 0.5) * 10;
+      cards.forEach(card => {
+        card.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
+      });
     });
 
-    function drawImage() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.filter = `${currentFilter} brightness(${brightness}%) contrast(${contrast}%)`;
-      const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
-      const w = img.width * scale;
-      const h = img.height * scale;
-      const x = (canvas.width - w) / 2;
-      const y = (canvas.height - h) / 2;
-      ctx.drawImage(img, x, y, w, h);
+    // Musik
+    function playMusic(){
+      bgMusic.volume = 0;
+      bgMusic.play();
+      let vol = 0;
+      const fade = setInterval(()=>{
+        if(vol < 1){ vol += 0.05; bgMusic.volume = vol; }
+        else clearInterval(fade);
+      }, 200);
+      musicPlaying = true;
     }
 
-    function openPopup(id) {
-      document.querySelectorAll('.popup').forEach(p => p.style.display = 'none');
-      document.getElementById(id).style.display = 'block';
+    function toggleMusic(){
+      if(musicPlaying){
+        bgMusic.pause();
+        musicToggle.innerText = "🔇";
+      } else {
+        bgMusic.play();
+        musicToggle.innerText = "🔊";
+      }
+      musicPlaying = !musicPlaying;
     }
-
-    function applyFilter(f) {
-      currentFilter = f;
-      drawImage();
-    }
-
-    function applyCrop(rw, rh) {
-      const ratio = rw / rh;
-      const newW = canvas.width;
-      const newH = newW / ratio;
-      canvas.height = newH;
-      drawImage();
-    }
-
-    function applyAdjust() {
-      brightness = document.getElementById('brightness').value;
-      contrast = document.getElementById('contrast').value;
-      drawImage();
-    }
-
-    function exportCanvas() {
-      const resolution = document.getElementById('resolution').value;
-      const format = document.getElementById('format').value;
-
-      const temp = document.createElement('canvas');
-      const tctx = temp.getContext('2d');
-      const aspect = canvas.width / canvas.height;
-      const width = resolution * (aspect > 1 ? aspect : 1);
-      const height = resolution / (aspect > 1 ? 1 : aspect);
-      temp.width = width;
-      temp.height = height;
-
-      tctx.filter = ctx.filter;
-      tctx.drawImage(img, 0, 0, width, height);
-
-      const link = document.createElement('a');
-      link.download = 'export.' + format.split('/')[1];
-      link.href = temp.toDataURL(format);
-      link.click();
-    }
-  </script>
-</body>
+  </script></body>
 </html>
