@@ -1,5 +1,4 @@
 <!doctype html>
-
 <html lang="id">
 <head>
 <meta charset="utf-8" />
@@ -15,7 +14,7 @@
   .wrap{max-width:980px;margin:14px auto;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);box-shadow:0 20px 60px rgba(0,0,0,.6);background:linear-gradient(180deg,rgba(255,255,255,.01),transparent)}
   .canvas-area{height:62vh;min-height:360px;background:linear-gradient(180deg,#08080a,#0b0c10);display:flex;align-items:center;justify-content:center;position:relative;padding:18px}
   .canvas-frame{width:100%;height:100%;max-width:920px;max-height:100%;background:#000;border-radius:12px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
-  #mediaPreview,#mediaVideo{max-width:100%;max-height:100%;object-fit:contain;display:block;background:#000;transition:transform .2s ease}
+  #mediaPreview,#mediaVideo{width:100%;height:100%;object-fit:contain;display:block;background:#000}
   .upload-overlay{position:absolute;left:16px;top:16px;background:rgba(0,0,0,0.5);padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);cursor:pointer}
   .hint-bottom{position:absolute;left:16px;bottom:16px;color:var(--muted);font-size:13px}
   .toolbar{display:flex;align-items:center;gap:8px;padding:10px;background:linear-gradient(180deg,var(--panel),#0a0a0d);border-top:1px solid rgba(255,255,255,0.03);overflow:hidden}
@@ -25,22 +24,23 @@
   .tool.active{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#040414;box-shadow:0 6px 20px rgba(108,92,231,.18)}
   .tool .ico{font-size:20px;margin-bottom:6px}
   .tool .label{font-size:12px;white-space:nowrap}
-  .panel{position:fixed;left:0;right:0;bottom:-420px;background:#0f1114;padding:16px;border-top-left-radius:14px;border-top-right-radius:14px;box-shadow:0 -18px 60px rgba(0,0,0,.6);transition:bottom .28s ease;max-height:48vh;overflow:auto}
+  .panel{position:fixed;left:0;right:0;bottom:-480px;background:#0f1114;padding:16px;border-top-left-radius:14px;border-top-right-radius:14px;box-shadow:0 -18px 60px rgba(0,0,0,.6);transition:bottom .28s ease;max-height:80vh;overflow:auto}
   .panel.open{bottom:0}
   .panel .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
   .panel h3{margin:0;font-size:16px}
   .panel .options{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
   .pill{padding:8px 12px;background:#121316;border-radius:10px;border:1px solid rgba(255,255,255,0.03);cursor:pointer}
-  .row{display:flex;gap:10px;align-items:center}
+  .row{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+  .row input{width:80px;padding:4px;border-radius:6px;border:none;background:#222;color:#fff;text-align:center}
   .btn{padding:10px 14px;border-radius:10px;border:none;cursor:pointer;background:#222;color:#fff}
   .btn.positive{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#040414}
   .small{font-size:13px;color:var(--muted)}
-  .bottom-bar{display:flex;justify-content:space-between;padding:10px 16px;font-size:14px;color:var(--muted);background:var(--panel);border-top:1px solid rgba(255,255,255,0.03)}
   @media (max-width:720px){ .wrap{margin:6px} .tool{min-width:48px;padding:6px} .panel{padding:12px} }
 </style>
 </head>
 <body>
 <div class="wrap" id="app">
+
   <div class="canvas-area">
     <div class="canvas-frame">
       <img id="mediaPreview" alt="Preview" src="" style="display:none">
@@ -49,43 +49,38 @@
       <input id="fileInput" type="file" accept="image/*,video/*" style="display:none">
       <div class="hint-bottom">Upload media → preview akan menyesuaikan ukuran canvas</div>
     </div>
-  </div>  <div class="toolbar">
+  </div>
+
+  <div class="toolbar">
     <div class="tools" id="tools">
       <div class="tool" data-feature="Crop"><div class="ico">📐</div><div class="label">Crop</div></div>
       <div class="tool" data-feature="Rasio"><div class="ico">🔲</div><div class="label">Rasio</div></div>
       <div class="tool" data-feature="Trim"><div class="ico">✂️</div><div class="label">Trim</div></div>
-      <div class="tool" data-feature="Split"><div class="ico">🔪</div><div class="label">Split</div></div>
-      <div class="tool" data-feature="Speed"><div class="ico">⏩</div><div class="label">Speed</div></div>
-      <div class="tool" data-feature="Volume"><div class="ico">🔊</div><div class="label">Volume</div></div>
-      <div class="tool" data-feature="Music"><div class="ico">🎵</div><div class="label">Music</div></div>
-      <div class="tool" data-feature="Record"><div class="ico">🎤</div><div class="label">Record</div></div>
-      <div class="tool" data-feature="Filters"><div class="ico">🎨</div><div class="label">Filter</div></div>
-      <div class="tool" data-feature="Effect"><div class="ico">✨</div><div class="label">Effect</div></div>
-      <div class="tool" data-feature="Adjust"><div class="ico">⚙️</div><div class="label">Adjust</div></div>
-      <div class="tool" data-feature="Text"><div class="ico">🅰️</div><div class="label">Text</div></div>
+      <div class="tool" data-feature="Rotate"><div class="ico">🔃</div><div class="label">Rotate</div></div>
     </div>
-  </div>  <div class="bottom-bar">
-    <div>[Premium Plan]</div>
-    <div>[Profile]</div>
   </div>
-</div><div id="panel" class="panel" aria-hidden="true">
+
+</div>
+
+<div id="panel" class="panel" aria-hidden="true">
   <div class="head">
     <h3 id="panelTitle">Feature</h3>
-    <div class="small" id="panelInfo"></div>
+    <div class="small" id="panelInfo"> </div>
   </div>
   <div id="panelBody" class="panel-body"></div>
   <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px">
     <button class="btn" id="btnCancel">Batal</button>
     <button class="btn positive" id="btnDone">Selesai</button>
   </div>
-</div><script>
+</div>
+
+<script>
 const fileInput = document.getElementById('fileInput');
 const mediaImg = document.getElementById('mediaPreview');
 const mediaVideo = document.getElementById('mediaVideo');
 const panel = document.getElementById('panel');
 const panelTitle = document.getElementById('panelTitle');
 const panelBody = document.getElementById('panelBody');
-const panelInfo = document.getElementById('panelInfo');
 const btnCancel = document.getElementById('btnCancel');
 const btnDone = document.getElementById('btnDone');
 
@@ -94,47 +89,99 @@ fileInput.addEventListener('change', e=>{
   if(!f) return;
   const url = URL.createObjectURL(f);
   mediaImg.style.display='none'; mediaVideo.style.display='none';
-  if(f.type.startsWith('video')){ mediaVideo.src=url; mediaVideo.style.display='block'; mediaVideo.play().catch(()=>{});} 
-  else { mediaImg.src=url; mediaImg.style.display='block'; }
+  if(f.type.startsWith('video')){
+    mediaVideo.src = url; mediaVideo.style.display='block'; mediaVideo.play().catch(()=>{});
+  } else {
+    mediaImg.src = url; mediaImg.style.display='block';
+  }
 });
 
-function openPanel(feature){
-  panelTitle.textContent=feature;
-  panelInfo.textContent='';
-  panelBody.innerHTML='';
-  document.querySelectorAll('.tool').forEach(t=>t.classList.toggle('active',t.dataset.feature===feature));
+let cropBox = null;
+function resetCropBox(){
+  if(cropBox) cropBox.remove();
+  cropBox = document.createElement('div');
+  cropBox.style.position='absolute';
+  cropBox.style.border='2px dashed rgba(255,255,255,0.6)';
+  cropBox.style.pointerEvents='none';
+  const frame = document.querySelector('.canvas-frame');
+  const fw = frame.clientWidth;
+  const fh = frame.clientHeight;
+  cropBox.style.left = '10%';
+  cropBox.style.top = '10%';
+  cropBox.style.width = fw*0.8+'px';
+  cropBox.style.height = fh*0.8+'px';
+  frame.appendChild(cropBox);
+}
+
+function applyCropPreset(ratio){
+  if(!cropBox) resetCropBox();
+  const frame = document.querySelector('.canvas-frame');
+  const fw = frame.clientWidth;
+  const fh = frame.clientHeight;
+  let cw,ch;
+  if(fw/fh > ratio){
+    ch = fh*0.8;
+    cw = ch*ratio;
+  } else {
+    cw = fw*0.8;
+    ch = cw/ratio;
+  }
+  cropBox.style.width = cw+'px';
+  cropBox.style.height = ch+'px';
+  cropBox.style.left = (fw-cw)/2+'px';
+  cropBox.style.top = (fh-ch)/2+'px';
+}
+
+/* Open panel */
+document.getElementById('tools').addEventListener('click', e=>{
+  const tool = e.target.closest('.tool');
+  if(!tool) return;
+  const feature = tool.dataset.feature;
+  panel.classList.add('open');
+  panelTitle.textContent = feature;
+  panelBody.innerHTML = '';
+  document.querySelectorAll('.tool').forEach(t=>t.classList.toggle('active',t===tool));
 
   if(feature==='Crop'){
-    panelInfo.textContent='Crop preset & custom ratio';
-    const wrap=document.createElement('div'); wrap.className='options';
-    ['1:1','3:4','4:3','9:16','16:9','Custom'].forEach(r=>{
-      const b=document.createElement('div'); b.className='pill'; b.textContent=r;
-      b.onclick=()=>applyCrop(r);
-      wrap.appendChild(b);
+    const presets = ['Square','Story','Post','Cover','Header','TikTok','eBay'];
+    const optionsDiv = document.createElement('div'); optionsDiv.className='options';
+    presets.forEach(p=>{
+      const btn = document.createElement('div'); btn.className='pill'; btn.textContent=p;
+      btn.onclick = ()=>{
+        let ratio = 1;
+        if(p==='Square') ratio=1;
+        else if(p==='Story') ratio=9/16;
+        else if(p==='Post') ratio=4/5;
+        else if(p==='Cover') ratio=16/9;
+        else if(p==='Header') ratio=3/1;
+        else if(p==='TikTok') ratio=9/16;
+        else if(p==='eBay') ratio=5/4;
+        applyCropPreset(ratio);
+      };
+      optionsDiv.appendChild(btn);
     });
-    panelBody.appendChild(wrap);
+    panelBody.appendChild(optionsDiv);
+
+    const customDiv = document.createElement('div'); customDiv.className='row';
+    customDiv.innerHTML = `
+      Width: <input id="cropWidth" type="number" value="1234"> 
+      Height: <input id="cropHeight" type="number" value="1234">
+      <button class="btn" id="applyCustom">Ok</button>
+    `;
+    panelBody.appendChild(customDiv);
+
+    document.getElementById('applyCustom').onclick=()=>{
+      const w = parseInt(document.getElementById('cropWidth').value);
+      const h = parseInt(document.getElementById('cropHeight').value);
+      const ratio = w/h;
+      applyCropPreset(ratio);
+    };
   }
-  panel.classList.add('open'); panel.setAttribute('aria-hidden','false');
-}
-
-function applyCrop(r){
-  if(r==='Custom'){
-    const custom=prompt('Masukkan rasio custom (lebar:tinggi), contoh 5:7');
-    if(custom){ console.log('Custom crop:',custom); }
-  } else {
-    console.log('Preset crop:',r);
-  }
-  closePanel();
-}
-
-function closePanel(){ panel.classList.remove('open'); panel.setAttribute('aria-hidden','true'); document.querySelectorAll('.tool').forEach(t=>t.classList.remove('active'));}
-
-document.getElementById('tools').addEventListener('click', e=>{
-  const el=e.target.closest('.tool'); if(!el) return;
-  openPanel(el.dataset.feature);
 });
-btnCancel.onclick=closePanel; btnDone.onclick=closePanel;
+
+btnCancel.onclick = ()=>panel.classList.remove('open');
+btnDone.onclick = ()=>panel.classList.remove('open');
 document.querySelector('.upload-overlay').addEventListener('click', ()=>fileInput.click());
-window.addEventListener('keydown', e=>{ if(e.key==='Escape') closePanel(); });
-</script></body>
+</script>
+</body>
 </html>
