@@ -1,22 +1,21 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Editor Mockup — Full Features</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Twintra Editor Prototype</title>
 <style>
 :root{
   --bg:#0b0b0f; --panel:#0f1114; --muted:#aab0b6; --accent:#6c5ce7; --accent2:#00d4b4;
   --card:#121316; --glass: rgba(255,255,255,0.02);
 }
-*{box-sizing:border-box}
+*{box-sizing:border-box;}
 html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#07070a,#0f0f12);color:#e8e8ee}
 .wrap{max-width:980px;margin:14px auto;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);box-shadow:0 20px 60px rgba(0,0,0,.6);background:linear-gradient(180deg,rgba(255,255,255,.01),transparent)}
 /* Canvas */
 .canvas-area{height:62vh;min-height:360px;background:linear-gradient(180deg,#08080a,#0b0c10);display:flex;align-items:center;justify-content:center;position:relative;padding:18px}
 .canvas-frame{width:100%;height:100%;max-width:920px;max-height:100%;background:#000;border-radius:12px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
-#mediaPreview{width:100%;height:100%;object-fit:contain;display:block;background:#000}
-#mediaVideo{width:100%;height:100%;object-fit:contain;display:none;background:#000}
+#mediaPreview,#mediaVideo{width:100%;height:100%;object-fit:contain;display:block;background:#000;transition: all 0.2s;}
 .upload-overlay{position:absolute;left:16px;top:16px;background:rgba(0,0,0,0.5);padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);cursor:pointer}
 .hint-bottom{position:absolute;left:16px;bottom:16px;color:var(--muted);font-size:13px}
 /* Toolbar */
@@ -28,7 +27,7 @@ html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Roboto,Arial;backgroun
 .tool .ico{font-size:20px;margin-bottom:6px}
 .tool .label{font-size:12px;white-space:nowrap}
 /* Submenu panel */
-.panel{position:fixed;left:0;right:0;bottom:-420px;background:#0f1114;padding:16px;border-top-left-radius:14px;border-top-right-radius:14px;box-shadow:0 -18px 60px rgba(0,0,0,.6);transition:bottom .28s ease;max-height:48vh;overflow:auto}
+.panel{position:fixed;left:0;right:0;bottom:-420px;background:#0f1114;padding:16px;border-top-left-radius:14px;border-top-right-radius:14px;box-shadow:0 -18px 60px rgba(0,0,0,.6);transition:bottom .28s ease;max-height:48vh;overflow:auto;z-index:1000}
 .panel.open{bottom:0}
 .panel .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .panel h3{margin:0;font-size:16px}
@@ -38,10 +37,13 @@ html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Roboto,Arial;backgroun
 .btn{padding:10px 14px;border-radius:10px;border:none;cursor:pointer;background:#222;color:#fff}
 .btn.positive{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#040414}
 .small{font-size:13px;color:var(--muted)}
-/* Crop modal */
-#cropPanel{max-width:400px;margin:auto;top:50%;transform:translateY(-50%);display:none;position:absolute;left:0;right:0;z-index:50;background:#121316;padding:16px;border-radius:12px;}
-#cropPanel h3{margin:0 0 10px 0;}
-#cropPanel .options{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0;}
+/* Custom Crop Modal */
+#customCropModal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:2000;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+#customCropModal.open{opacity:1;pointer-events:auto;}
+#customCropContent{background:#121316;padding:20px;border-radius:14px;width:280px;display:flex;flex-direction:column;gap:12px}
+#customCropContent input{width:100%;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:#0f1114;color:#fff}
+#customCropContent .buttons{display:flex;justify-content:space-between;gap:10px}
+/* responsive */
 @media (max-width:720px){ .wrap{margin:6px} .tool{min-width:48px;padding:6px} .panel{padding:12px} }
 </style>
 </head>
@@ -55,7 +57,7 @@ html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Roboto,Arial;backgroun
       <video id="mediaVideo" controls style="display:none;background:#000"></video>
       <label for="fileInput" class="upload-overlay">📁 Upload</label>
       <input id="fileInput" type="file" accept="image/*,video/*" style="display:none">
-      <div class="hint-bottom">Upload media → preview akan menyesuaikan ukuran canvas</div>
+      <div class="hint-bottom">Upload media → preview akan menyesuaikan ukuran</div>
     </div>
   </div>
 
@@ -67,120 +69,203 @@ html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Roboto,Arial;backgroun
       <div class="tool" data-feature="Trim"><div class="ico">✂️</div><div class="label">Trim</div></div>
       <div class="tool" data-feature="Speed"><div class="ico">⏩</div><div class="label">Speed</div></div>
       <div class="tool" data-feature="Volume"><div class="ico">🔊</div><div class="label">Volume</div></div>
+      <div class="tool" data-feature="Rotate"><div class="ico">🔃</div><div class="label">Rotate</div></div>
       <div class="tool" data-feature="Export"><div class="ico">⬇️</div><div class="label">Export</div></div>
     </div>
   </div>
 
 </div>
 
-<!-- Crop Modal -->
-<div id="cropPanel">
-  <h3>Crop Media</h3>
-  <div><strong>Presets:</strong>
-    <div class="options">
-      <button data-ratio="1/1">Square</button>
-      <button data-ratio="9/16">Story</button>
-      <button data-ratio="4/5">Post</button>
-      <button data-ratio="16/9">Cover</button>
-      <button data-ratio="2/1">Header</button>
-      <button data-ratio="9/16">TikTok</button>
-      <button data-ratio="4/3">eBay</button>
+<!-- Submenu Panel -->
+<div id="panel" class="panel" aria-hidden="true">
+  <div class="head">
+    <h3 id="panelTitle">Feature</h3>
+    <div class="small" id="panelInfo"></div>
+  </div>
+  <div id="panelBody" class="panel-body"></div>
+  <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px">
+    <button class="btn" id="btnCancel">Batal</button>
+    <button class="btn positive" id="btnDone">Selesai</button>
+  </div>
+</div>
+
+<!-- Custom Crop Modal -->
+<div id="customCropModal">
+  <div id="customCropContent">
+    <div>Custom Crop Ratio</div>
+    <input id="customWidth" type="number" placeholder="Width">
+    <input id="customHeight" type="number" placeholder="Height">
+    <div class="buttons">
+      <button class="btn" id="modalCancel">Cancel</button>
+      <button class="btn positive" id="modalOk">Ok</button>
     </div>
-  </div>
-  <div style="margin-top:10px;">
-    <strong>Custom Crop:</strong><br>
-    Width <input id="customWidth" type="number" value="1234" style="width:60px;">
-    Height <input id="customHeight" type="number" value="1234" style="width:60px;">
-  </div>
-  <div style="display:flex;justify-content:space-between;margin-top:12px;">
-    <button id="customCancel">Cancel</button>
-    <button id="customOk">Ok</button>
   </div>
 </div>
 
 <script>
-// Media upload
-const fileInput = document.getElementById('fileInput');
-const mediaImg = document.getElementById('mediaPreview');
-const mediaVideo = document.getElementById('mediaVideo');
-let mediaElem = null;
-let originalMedia = {width:0,height:0};
+// ===== Core DOM Elements =====
+const fileInput=document.getElementById('fileInput');
+const mediaImg=document.getElementById('mediaPreview');
+const mediaVideo=document.getElementById('mediaVideo');
+const tools=document.querySelectorAll('.tool');
+const panel=document.getElementById('panel');
+const panelTitle=document.getElementById('panelTitle');
+const panelBody=document.getElementById('panelBody');
+const panelInfo=document.getElementById('panelInfo');
+const btnCancel=document.getElementById('btnCancel');
+const btnDone=document.getElementById('btnDone');
+const customCropModal=document.getElementById('customCropModal');
+const modalCancel=document.getElementById('modalCancel');
+const modalOk=document.getElementById('modalOk');
+const customWidth=document.getElementById('customWidth');
+const customHeight=document.getElementById('customHeight');
 
+// ===== Upload Media =====
 fileInput.addEventListener('change', e=>{
-  const f = e.target.files[0];
+  const f=e.target.files[0];
   if(!f) return;
-  const url = URL.createObjectURL(f);
+  const url=URL.createObjectURL(f);
   mediaImg.style.display='none'; mediaVideo.style.display='none';
-  if(f.type.startsWith('video')){ mediaVideo.src=url; mediaVideo.style.display='block'; mediaVideo.play().catch(()=>{}); mediaElem=mediaVideo;}
-  else {mediaImg.src=url; mediaImg.style.display='block'; mediaElem=mediaImg;}
-  setTimeout(()=>setOriginalMedia(mediaElem.offsetWidth,mediaElem.offsetHeight),50);
+  if(f.type.startsWith('video')){
+    mediaVideo.src=url; mediaVideo.style.display='block'; mediaVideo.play().catch(()=>{});
+  } else{
+    mediaImg.src=url; mediaImg.style.display='block';
+  }
 });
 
-function setOriginalMedia(w,h){ originalMedia={width:w,height:h}; }
+// ===== Open Panel =====
+function openPanel(feature){
+  panelTitle.textContent=feature;
+  panelInfo.textContent='';
+  panelBody.innerHTML='';
+  document.querySelectorAll('.tool').forEach(t=>t.classList.toggle('active',t.dataset.feature===feature));
 
-// Crop modal
-const cropPanel = document.getElementById('cropPanel');
-const presetButtons = cropPanel.querySelectorAll('[data-ratio]');
-const customCancel = document.getElementById('customCancel');
-const customOk = document.getElementById('customOk');
-const customWidth = document.getElementById('customWidth');
-const customHeight = document.getElementById('customHeight');
+  if(feature==='Crop'){
+    panelInfo.textContent='Pilih preset crop atau custom';
+    const presets=['Square','Story','Post','Cover','Header','TikTok','eBay'];
+    const wrapper=document.createElement('div'); wrapper.className='options';
+    presets.forEach(p=>{
+      const b=document.createElement('div'); b.className='pill'; b.textContent=p;
+      b.onclick=()=>applyCropPreset(p);
+      wrapper.appendChild(b);
+    });
+    panelBody.appendChild(wrapper);
+    const customBtn=document.createElement('div'); customBtn.className='pill'; customBtn.textContent='Custom';
+    customBtn.onclick=()=>customCropModal.classList.add('open');
+    panelBody.appendChild(customBtn);
+  }
 
-function openCropPanel(){
-  if(!mediaElem) return;
-  cropPanel.style.display='block';
-  setOriginalMedia(mediaElem.offsetWidth,mediaElem.offsetHeight);
-  closePanelImmediate();
+  else if(feature==='Rotate'){
+    panelInfo.textContent='Rotate / Flip';
+    const options=[['Rotate 90','rotate90'],['Rotate -90','rotate-90'],['Flip H','flipH']];
+    const wrapper=document.createElement('div'); wrapper.className='options';
+    options.forEach(o=>{
+      const b=document.createElement('div'); b.className='pill'; b.textContent=o[0];
+      b.onclick=()=>applyRotate(o[1]); wrapper.appendChild(b);
+    });
+    panelBody.appendChild(wrapper);
+  }
+
+  else if(feature==='Trim'){
+    panelInfo.textContent='Trim video (simulasi)';
+    const container=document.createElement('div');
+    container.innerHTML=`<div class="row">
+      Start <input id="trimStart" type="range" min="0" max="100" value="0">
+      End <input id="trimEnd" type="range" min="0" max="100" value="100">
+    </div><div class="small">Preview tombol Selesai untuk apply (simulasi)</div>`;
+    panelBody.appendChild(container);
+  }
+
+  else if(feature==='Speed'){
+    panelInfo.textContent='Playback speed';
+    const speeds=['0.5x','0.75x','1x','1.5x','2x'];
+    const wrapper=document.createElement('div'); wrapper.className='options';
+    speeds.forEach(s=>{
+      const b=document.createElement('div'); b.className='pill'; b.textContent=s; b.onclick=()=>applySpeed(s);
+      wrapper.appendChild(b);
+    });
+    panelBody.appendChild(wrapper);
+  }
+
+  else if(feature==='Volume'){
+    panelInfo.textContent='Adjust volume';
+    const vRange=document.createElement('input'); vRange.type='range'; vRange.min=0; vRange.max=100; vRange.value=100;
+    vRange.oninput=()=>{if(mediaVideo.style.display==='block') mediaVideo.volume=vRange.value/100;};
+    panelBody.appendChild(vRange);
+  }
+
+  panel.classList.add('open');
+  panel.setAttribute('aria-hidden','false');
 }
 
-presetButtons.forEach(btn=>{
-  btn.onclick = ()=>{
-    const [w,h]=btn.dataset.ratio.split('/').map(Number);
-    applyCropRatio(w,h);
-    cropPanel.style.display='none';
-  };
+// ===== Crop Preset =====
+function applyCropPreset(preset){
+  let w,h;
+  switch(preset){
+    case 'Square': w=h=1276; break;
+    case 'Story': w=1080; h=1920; break;
+    case 'Post': w=1080; h=1080; break;
+    case 'Cover': w=1200; h=675; break;
+    case 'Header': w=1500; h=500; break;
+    case 'TikTok': w=1080; h=1920; break;
+    case 'eBay': w=1600; h=1200; break;
+    default: w=h=1000;
+  }
+  resizeMedia(w,h); closePanel();
+}
+
+// ===== Custom Crop =====
+modalOk.onclick=()=>{
+  const w=parseInt(customWidth.value)||1000;
+  const h=parseInt(customHeight.value)||1000;
+  resizeMedia(w,h);
+  customCropModal.classList.remove('open');
+  closePanel();
+};
+modalCancel.onclick=()=>customCropModal.classList.remove('open');
+
+// ===== Resize Media =====
+function resizeMedia(width,height){
+  if(mediaImg.style.display==='block'){
+    mediaImg.style.width=width+'px';
+    mediaImg.style.height=height+'px';
+  }
+  if(mediaVideo.style.display==='block'){
+    mediaVideo.style.width=width+'px';
+    mediaVideo.style.height=height+'px';
+  }
+}
+
+// ===== Rotate / Flip =====
+function applyRotate(mode){
+  const t={'rotate90':'rotate(90deg)','rotate-90':'rotate(-90deg)','flipH':'scaleX(-1)'};
+  if(mediaImg.style.display==='block') mediaImg.style.transform=t[mode];
+  if(mediaVideo.style.display==='block') mediaVideo.style.transform=t[mode];
+  closePanel();
+}
+
+// ===== Speed =====
+function applySpeed(s){
+  const v=parseFloat(s.replace('x',''))||1;
+  if(mediaVideo.style.display==='block') mediaVideo.playbackRate=v;
+  closePanel();
+}
+
+// ===== Close Panel =====
+function closePanel(){panel.classList.remove('open');panel.setAttribute('aria-hidden','true');document.querySelectorAll('.tool').forEach(t=>t.classList.remove('active'));}
+
+// ===== Toolbar Click =====
+document.getElementById('tools').addEventListener('click',e=>{
+  const el=e.target.closest('.tool'); if(!el) return;
+  openPanel(el.dataset.feature);
 });
 
-customCancel.onclick = ()=>{
-  cropPanel.style.display='none';
-  restoreMedia();
-};
+// ===== Cancel / Done Buttons =====
+btnCancel.onclick=closePanel;
+btnDone.onclick=closePanel;
 
-customOk.onclick = ()=>{
-  const w=parseFloat(customWidth.value);
-  const h=parseFloat(customHeight.value);
-  if(w>0 && h>0) applyCropRatio(w,h);
-  cropPanel.style.display='none';
-};
-
-function applyCropRatio(rw,rh){
-  if(!mediaElem) return;
-  const frame = mediaElem.parentElement;
-  const maxW = frame.clientWidth;
-  const maxH = frame.clientHeight;
-  const targetRatio = rw/rh;
-  const mediaRatio = mediaElem.naturalWidth / mediaElem.naturalHeight;
-  let newW,newH;
-  if(mediaRatio > targetRatio){ newH=maxH; newW=maxH*targetRatio;}
-  else {newW=maxW; newH=maxW/targetRatio;}
-  mediaElem.style.width=newW+'px';
-  mediaElem.style.height=newH+'px';
-  mediaElem.style.objectFit='cover';
-}
-
-function restoreMedia(){
-  if(!mediaElem) return;
-  mediaElem.style.width=originalMedia.width+'px';
-  mediaElem.style.height=originalMedia.height+'px';
-  mediaElem.style.objectFit='contain';
-}
-
-// Toolbar hook
-document.querySelector('[data-feature="Crop"]').onclick=openCropPanel;
-
-// Utility
-function closePanelImmediate(){ document.querySelectorAll('.tool').forEach(t=>t.classList.remove('active')); }
+// ===== Upload Overlay Click =====
+document.querySelector('.upload-overlay').addEventListener('click',()=>fileInput.click());
 </script>
-
 </body>
 </html>
