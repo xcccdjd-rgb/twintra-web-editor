@@ -1,136 +1,225 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Editor Mockup Crop Interaktif</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Editor Mockup — Full Features</title>
 <style>
-  :root{
-    --bg:#0b0b0f; --panel:#0f1114; --muted:#aab0b6; --accent:#6c5ce7; --accent2:#00d4b4;
-    --card:#121316; --glass: rgba(255,255,255,0.02);
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#07070a,#0f0f12);color:#e8e8ee}
-  .wrap{max-width:980px;margin:14px auto;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);box-shadow:0 20px 60px rgba(0,0,0,.6);background:linear-gradient(180deg,rgba(255,255,255,.01),transparent)}
-  
-  .canvas-area{height:62vh;min-height:360px;background:linear-gradient(180deg,#08080a,#0b0c10);display:flex;align-items:center;justify-content:center;position:relative;padding:18px}
-  .canvas-frame{width:100%;height:100%;max-width:920px;max-height:100%;background:#000;border-radius:12px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
-  #mediaPreview{width:100%;height:100%;object-fit:contain;display:block;background:#000;transition:0.3s}
-  .upload-overlay{position:absolute;left:16px;top:16px;background:rgba(0,0,0,0.5);padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);cursor:pointer}
-  .hint-bottom{position:absolute;left:16px;bottom:16px;color:var(--muted);font-size:13px}
-  
-  .panel{position:fixed;left:0;right:0;bottom:-420px;background:#0f1114;padding:16px;border-top-left-radius:14px;border-top-right-radius:14px;box-shadow:0 -18px 60px rgba(0,0,0,.6);transition:bottom .28s ease;max-height:48vh;overflow:auto}
-  .panel.open{bottom:0}
-  .panel .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-  .panel h3{margin:0;font-size:16px}
-  .panel .options{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-  .pill{padding:8px 12px;background:#121316;border-radius:10px;border:1px solid rgba(255,255,255,0.03);cursor:pointer}
-  .row{display:flex;gap:10px;align-items:center}
-  .btn{padding:10px 14px;border-radius:10px;border:none;cursor:pointer;background:#222;color:#fff}
-  .btn.positive{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#040414}
-  .small{font-size:13px;color:var(--muted)}
-  
-  #customModal{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#121316;padding:20px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);display:none;z-index:10;min-width:260px}
-  #customModal input{width:80px;background:#000;color:#fff;border:1px solid #555;border-radius:6px;padding:4px;text-align:center;margin:0 4px}
-  #cropOverlay{position:absolute;border:2px dashed var(--accent);pointer-events:none;display:none}
-  
-  @media(max-width:720px){
-    .wrap{margin:6px}
-  }
+:root{
+  --bg:#0b0b0f; --panel:#0f1114; --muted:#aab0b6; --accent:#6c5ce7; --accent2:#00d4b4;
+  --card:#121316; --glass: rgba(255,255,255,0.02);
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#07070a,#0f0f12);color:#e8e8ee}
+.wrap{max-width:980px;margin:14px auto;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);box-shadow:0 20px 60px rgba(0,0,0,.6);background:linear-gradient(180deg,rgba(255,255,255,.01),transparent)}
+/* Canvas */
+.canvas-area{height:62vh;min-height:360px;background:linear-gradient(180deg,#08080a,#0b0c10);display:flex;align-items:center;justify-content:center;position:relative;padding:18px}
+.canvas-frame{width:100%;height:100%;max-width:920px;max-height:100%;background:#000;border-radius:12px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+#mediaPreview{width:100%;height:100%;object-fit:contain;display:block;background:#000}
+#mediaVideo{width:100%;height:100%;object-fit:contain;display:block;background:#000}
+.upload-overlay{position:absolute;left:16px;top:16px;background:rgba(0,0,0,0.5);padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);cursor:pointer}
+.hint-bottom{position:absolute;left:16px;bottom:16px;color:var(--muted);font-size:13px}
+/* Toolbar */
+.toolbar{display:flex;align-items:center;gap:8px;padding:10px;background:linear-gradient(180deg,var(--panel),#0a0a0d);border-top:1px solid rgba(255,255,255,0.03);overflow:hidden}
+.tools{display:flex;gap:10px;overflow-x:auto;padding:6px 10px;scrollbar-width:none}
+.tools::-webkit-scrollbar{display:none}
+.tool{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 10px;border-radius:10px;min-width:56px;background:var(--glass);border:1px solid rgba(255,255,255,0.02);cursor:pointer;color:var(--muted)}
+.tool.active{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#040414;box-shadow:0 6px 20px rgba(108,92,231,.18)}
+.tool .ico{font-size:20px;margin-bottom:6px}
+.tool .label{font-size:12px;white-space:nowrap}
+/* Submenu panel */
+.panel{position:fixed;left:0;right:0;bottom:-420px;background:#0f1114;padding:16px;border-top-left-radius:14px;border-top-right-radius:14px;box-shadow:0 -18px 60px rgba(0,0,0,.6);transition:bottom .28s ease;max-height:48vh;overflow:auto;z-index:20}
+.panel.open{bottom:0}
+.panel .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.panel h3{margin:0;font-size:16px}
+.panel .options{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.pill{padding:8px 12px;background:#121316;border-radius:10px;border:1px solid rgba(255,255,255,0.03);cursor:pointer}
+.row{display:flex;gap:10px;align-items:center}
+.btn{padding:10px 14px;border-radius:10px;border:none;cursor:pointer;background:#222;color:#fff}
+.btn.positive{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#040414}
+.small{font-size:13px;color:var(--muted)}
+/* Footer */
+.footer{display:flex;justify-content:space-between;padding:10px 16px;background:#0f1114;border-top:1px solid rgba(255,255,255,0.03);font-size:14px;color:var(--muted)}
+/* Custom modal for crop */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:30}
+.modal{background:#121316;padding:16px;border-radius:12px;min-width:280px;max-width:360px;width:80%}
+.modal h3{margin-top:0;margin-bottom:10px;font-size:16px;text-align:center}
+.modal .row{justify-content:space-between;margin-bottom:10px}
+.modal input{width:45%;padding:6px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1a1a;color:#fff}
+.modal-buttons{display:flex;justify-content:space-between;margin-top:12px}
+@media (max-width:720px){ .wrap{margin:6px} .tool{min-width:48px;padding:6px} .panel{padding:12px} }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="canvas-area">
-    <div class="canvas-frame">
-      <img id="mediaPreview" src="" alt="Preview">
-      <label for="fileInput" class="upload-overlay">📁 Upload</label>
-      <input id="fileInput" type="file" accept="image/*" style="display:none">
-      <div class="hint-bottom">Upload media → preview akan menyesuaikan ukuran canvas</div>
-      <div id="cropOverlay"></div>
+  <div class="wrap" id="app">
+    <!-- Canvas area -->
+    <div class="canvas-area">
+      <div class="canvas-frame">
+        <img id="mediaPreview" alt="Preview" src="" style="display:none">
+        <video id="mediaVideo" controls style="display:none"></video>
+        <label for="fileInput" class="upload-overlay">📁 Upload</label>
+        <input id="fileInput" type="file" accept="image/*,video/*" style="display:none">
+        <div class="hint-bottom">Upload media → preview akan menyesuaikan ukuran canvas</div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="tools" id="tools">
+        <div class="tool" data-feature="Crop"><div class="ico">📐</div><div class="label">Crop</div></div>
+        <div class="tool" data-feature="Rasio"><div class="ico">🔲</div><div class="label">Rasio</div></div>
+        <div class="tool" data-feature="Trim"><div class="ico">✂️</div><div class="label">Trim</div></div>
+        <div class="tool" data-feature="Split"><div class="ico">🔪</div><div class="label">Split</div></div>
+        <div class="tool" data-feature="Speed"><div class="ico">⏩</div><div class="label">Speed</div></div>
+        <div class="tool" data-feature="Volume"><div class="ico">🔊</div><div class="label">Volume</div></div>
+        <div class="tool" data-feature="Music"><div class="ico">🎵</div><div class="label">Music</div></div>
+        <div class="tool" data-feature="Record"><div class="ico">🎤</div><div class="label">Record</div></div>
+        <div class="tool" data-feature="Filters"><div class="ico">🎨</div><div class="label">Filter</div></div>
+        <div class="tool" data-feature="Effect"><div class="ico">✨</div><div class="label">Effect</div></div>
+        <div class="tool" data-feature="Adjust"><div class="ico">⚙️</div><div class="label">Adjust</div></div>
+        <div class="tool" data-feature="Text"><div class="ico">🅰️</div><div class="label">Text</div></div>
+        <div class="tool" data-feature="Sticker"><div class="ico">⭐</div><div class="label">Sticker</div></div>
+        <div class="tool" data-feature="Overlay"><div class="ico">🖼️</div><div class="label">Overlay</div></div>
+        <div class="tool" data-feature="Replace"><div class="ico">🔁</div><div class="label">Replace</div></div>
+        <div class="tool" data-feature="Duplicate"><div class="ico">📄</div><div class="label">Duplicate</div></div>
+        <div class="tool" data-feature="Background"><div class="ico">🌆</div><div class="label">Background</div></div>
+        <div class="tool" data-feature="RemoveBG"><div class="ico">🧽</div><div class="label">RemoveBG</div></div>
+        <div class="tool" data-feature="Rotate"><div class="ico">🔃</div><div class="label">Rotate</div></div>
+        <div class="tool" data-feature="Flip"><div class="ico">↔️</div><div class="label">Flip</div></div>
+        <div class="tool" data-feature="Frame"><div class="ico">🖼️</div><div class="label">Frame</div></div>
+        <div class="tool" data-feature="Export"><div class="ico">⬇️</div><div class="label">Export</div></div>
+      </div>
     </div>
   </div>
-</div>
 
-<div class="panel" id="panel">
-  <div class="head">
-    <h3>Crop Media</h3>
+  <!-- Footer -->
+  <div class="footer">
+    <div>[Premium Plan]</div>
+    <div>[Profile]</div>
   </div>
-  <div class="options" id="presetOptions">
-    <div class="pill" data-width="1276" data-height="1276">Square</div>
-    <div class="pill" data-width="1080" data-height="1920">Story</div>
-    <div class="pill" data-width="1080" data-height="1080">Post</div>
-    <div class="pill" data-width="1200" data-height="628">Cover</div>
-    <div class="pill" data-width="1500" data-height="500">Header</div>
-    <div class="pill" data-width="1080" data-height="1920">TikTok</div>
-    <div class="pill" data-width="1200" data-height="1200">eBay</div>
+
+  <!-- Custom Crop Modal -->
+  <div class="modal-overlay" id="cropModal">
+    <div class="modal">
+      <h3>Custom Crop Ratio</h3>
+      <div class="row">
+        <input type="number" id="customWidth" placeholder="Width">
+        <input type="number" id="customHeight" placeholder="Height">
+      </div>
+      <div class="modal-buttons">
+        <button class="btn" id="cropCancel">Cancel</button>
+        <button class="btn positive" id="cropOk">Ok</button>
+      </div>
+    </div>
   </div>
-  <div class="small" style="margin:10px 0">Custom Crop Ratio</div>
-  <div class="row">
-    Width <input type="number" id="customWidth" value="1234"> 
-    Height <input type="number" id="customHeight" value="1234">
-  </div>
-  <div class="row" style="margin-top:12px;justify-content:space-between">
-    <button class="btn" id="cancelCrop">Cancel</button>
-    <button class="btn positive" id="okCrop">Ok</button>
-  </div>
-</div>
 
 <script>
 const fileInput = document.getElementById('fileInput');
-const mediaPreview = document.getElementById('mediaPreview');
-const cropOverlay = document.getElementById('cropOverlay');
-let overlayRect = {x:0,y:0,w:0,h:0};
+const mediaImg = document.getElementById('mediaPreview');
+const mediaVideo = document.getElementById('mediaVideo');
+const tools = document.querySelectorAll('.tool');
+const cropModal = document.getElementById('cropModal');
+const cropCancel = document.getElementById('cropCancel');
+const cropOk = document.getElementById('cropOk');
+const customWidth = document.getElementById('customWidth');
+const customHeight = document.getElementById('customHeight');
 
+let currentMedia = null;
+
+// Load media
 fileInput.addEventListener('change', e=>{
   const f = e.target.files[0];
   if(!f) return;
   const url = URL.createObjectURL(f);
-  mediaPreview.src = url;
+  mediaImg.style.display='none'; 
+  mediaVideo.style.display='none';
+  if(f.type.startsWith('video')){
+    mediaVideo.src = url; mediaVideo.style.display='block'; mediaVideo.play().catch(()=>{});
+    currentMedia = mediaVideo;
+  } else {
+    mediaImg.src = url; mediaImg.style.display='block';
+    currentMedia = mediaImg;
+  }
 });
 
-function setOverlay(w,h){
-  const frame = document.querySelector('.canvas-frame');
-  const fw = frame.clientWidth;
-  const fh = frame.clientHeight;
-  const rw = Math.min(fw,w/fw*fw);
-  const rh = Math.min(fh,h/fh*fh);
-  cropOverlay.style.display='block';
-  cropOverlay.style.width = rw+'px';
-  cropOverlay.style.height = rh+'px';
-  cropOverlay.style.left = (fw-rw)/2+'px';
-  cropOverlay.style.top = (fh-rh)/2+'px';
-  overlayRect = {x:(fw-rw)/2, y:(fh-rh)/2, w:rw, h:rh};
+// Toolbar click
+document.getElementById('tools').addEventListener('click', e=>{
+  const el = e.target.closest('.tool');
+  if(!el) return;
+  const feature = el.dataset.feature;
+  if(feature==='Crop'){
+    openCropPanel();
+  }
+  // Other features can be added similarly
+});
+
+// Crop panel
+function openCropPanel(){
+  const panel = document.querySelector('.panel');
+  panel.innerHTML = `
+    <div class="head"><h3>Crop Media</h3></div>
+    <div class="options">
+      <div class="pill" onclick="applyPreset('Square')">Square</div>
+      <div class="pill" onclick="applyPreset('Story')">Story</div>
+      <div class="pill" onclick="applyPreset('Post')">Post</div>
+      <div class="pill" onclick="applyPreset('Cover')">Cover</div>
+      <div class="pill" onclick="applyPreset('Header')">Header</div>
+      <div class="pill" onclick="applyPreset('TikTok')">TikTok</div>
+      <div class="pill" onclick="applyPreset('eBay')">eBay</div>
+    </div>
+    <div class="head"><h3>Custom Crop</h3></div>
+    <div class="row" style="justify-content:center;margin-top:8px">
+      <button class="btn positive" onclick="openCustomCrop()">Custom</button>
+    </div>
+  `;
+  panel.classList.add('open');
 }
 
-document.querySelectorAll('#presetOptions .pill').forEach(p=>{
-  p.addEventListener('click', ()=>{
-    const w = parseInt(p.dataset.width);
-    const h = parseInt(p.dataset.height);
-    setOverlay(w,h);
-  });
-});
+// Preset ratios
+const presets = {
+  'Square':[1276,1276],
+  'Story':[1080,1920],
+  'Post':[1200,900],
+  'Cover':[820,312],
+  'Header':[1500,500],
+  'TikTok':[1080,1920],
+  'eBay':[1200,1200]
+};
 
-document.getElementById('okCrop').addEventListener('click', ()=>{
-  const canvas = document.createElement('canvas');
-  canvas.width = overlayRect.w;
-  canvas.height = overlayRect.h;
-  const ctx = canvas.getContext('2d');
-  const img = mediaPreview;
-  const scaleX = img.naturalWidth / img.clientWidth;
-  const scaleY = img.naturalHeight / img.clientHeight;
-  ctx.drawImage(img,
-    overlayRect.x*scaleX, overlayRect.y*scaleY,
-    overlayRect.w*scaleX, overlayRect.h*scaleY,
-    0,0,overlayRect.w,overlayRect.h
-  );
-  img.src = canvas.toDataURL();
-  cropOverlay.style.display='none';
-});
+function applyPreset(name){
+  if(!currentMedia) return;
+  const [w,h] = presets[name];
+  currentMedia.style.width = '100%';
+  currentMedia.style.height = '100%';
+  currentMedia.style.objectFit = 'contain';
+  currentMedia.dataset.cropWidth = w;
+  currentMedia.dataset.cropHeight = h;
+  alert(`Preset ${name} applied (${w}x${h})`); // demo
+}
 
-document.getElementById('cancelCrop').addEventListener('click', ()=>{
-  cropOverlay.style.display='none';
+// Custom crop modal
+function openCustomCrop(){
+  cropModal.style.display='flex';
+}
+
+cropCancel.onclick = ()=>{ cropModal.style.display='none'; };
+cropOk.onclick = ()=>{
+  const w = parseInt(customWidth.value);
+  const h = parseInt(customHeight.value);
+  if(currentMedia && w>0 && h>0){
+    currentMedia.dataset.cropWidth=w;
+    currentMedia.dataset.cropHeight=h;
+    alert(`Custom crop applied (${w}x${h})`); // demo
+  }
+  cropModal.style.display='none';
+}
+
+// Close panel by clicking outside
+window.addEventListener('click', e=>{
+  if(e.target.classList.contains('modal-overlay')){
+    e.target.style.display='none';
+  }
 });
 </script>
 </body>
-</html>
+  </html>
