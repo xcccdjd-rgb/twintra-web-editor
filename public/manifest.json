@@ -1,0 +1,15 @@
+{
+  "short_name": "DSRT",
+  "name": "Digital Smart Revise Technology",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#191a2a",
+  "theme_color": "#35fff7",
+  "icons": [
+    {
+      "src": "logo.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
