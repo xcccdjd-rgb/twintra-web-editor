@@ -1,4 +1,4 @@
-# DSRT — Digital Smart Revise Technology
+DSRT — Digital Smart Revise Technology
 
 **DSRT** adalah aplikasi web kreatif all-in-one untuk editing foto, video, dan desain logo langsung di browser.  
 Fitur utama:
