@@ -1,0 +1,22 @@
+name: Auto Commit
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # Setiap hari jam 09:00 WIB (02:00 UTC)
+  workflow_dispatch:
+
+jobs:
+  auto-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Buat perubahan otomatis (contoh update timestamp)
+        run: |
+          echo "Terakhir auto-commit: $(date -u)" > AUTO-COMMIT-LOG.md
+
+      - name: Commit & push perubahan
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Auto commit: update timestamp by workflow"
