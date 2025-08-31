@@ -91,6 +91,12 @@ Output build ada di folder `build/`.
 
 ---
 
+## Limitations
+
+Lihat daftar keterbatasan aplikasi di [LIMITATIONS.md](./LIMITATIONS.md).
+
+---
+
 ## Kontribusi
 
 1. Fork repo ini.
